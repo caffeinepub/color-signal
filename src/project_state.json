@@ -1,0 +1,404 @@
+{
+  "schemaVersion": "1.0.0",
+  "projectStateVersion": 21,
+  "summary": "Color trading signal app that generates a Big/Small prediction signal with a simplified UI (tap-to-add Big/Small) and no login/Internet Identity; history persistence is not required; support a separate \"Prediction\" button; update prediction logic to better detect patterns/trends (including manipulation) using up to the last 20 Big/Small results; update history UI to show entries in a compact two-line format; when history reaches 20, show a \"Next\" button that must be tapped to enable adding the next Big/Small, at which point the oldest entry is removed and the list shifts forward (rolling window).",
+  "architectural_notes": [
+    "Remove Internet Identity authentication flow; app should function without sign-in.",
+    "Do not persist user history in backend; any state (if present) should be non-authenticated/non-persistent per user requirement.",
+    "Support a manual prediction trigger via a dedicated \"Prediction\" button (in addition to any auto-prediction behavior, unless later changed).",
+    "Prediction should be based on the last 20 Big/Small results provided by the user (no other data source specified).",
+    "Prediction logic should attempt automatic pattern/trend detection (including potential manipulation) rather than relying only on simple heuristics.",
+    "When history length reaches 20, require an explicit user tap on a \"Next\" button (shown only at full capacity) to unlock the next Big/Small input; upon adding the next entry, remove the oldest item and shift indices so the new entry becomes #20."
+  ],
+  "known_issues": [
+    "User requires 99.99% prediction accuracy; may be unrealistic/not verifiable depending on data and problem randomness.",
+    "Prediction signal not showing for the user (reported: \"signal আসছে না\").",
+    "Tap-to-add is not working: tapping Big/Small results in no history item added, no visual change, and no prediction update.",
+    "Prediction attempt is returning \"failed\" for the user (prediction not working in current build).",
+    "App is not opening/loading for the user (reported: \"app open হচ্ছে না\").",
+    "Prediction button still shows \"failed\" even after user enters a full 20-item Big/Small history (other buttons working).",
+    "\"Next\" button for the 20/20 gated flow has disappeared/not showing (user report: \"next button তো চলে গেছে\").",
+    "Prediction is still not working for the user in the latest deployed build (user report: \"Prediction হচ্ছে না\")."
+  ],
+  "isFixRequest": true,
+  "existing_features": [
+    {
+      "id": "feature-create-a-frontend-screen-that-lets-the-user-enter-and-manage-a-rolling-10-item-running-history-of-outcomes-with-only-two-allowed-values-big-and-small-provide-controls-to-add-the-next-result-remove-the-most-recent-result-clear-all-and-show-a-visible-count-0-10-to-10-10",
+      "title": "Create a frontend screen that lets the user enter and manage a rolling 10-item running history of outcomes with only two allowed values: \"Big\" and \"Small\". Provide controls to add the next result, remove the most recent result, clear all, and show a visible count (0/10 to 10/10).",
+      "reqIds": [
+        "REQ-1"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-persist-each-authenticated-user-s-10-item-history-in-the-backend-canister-and-load-it-on-sign-in-using-internet-identity-so-the-history-remains-available-after-page-refresh",
+      "title": "Persist each authenticated user's 10-item history in the backend canister and load it on sign-in using Internet Identity so the history remains available after page refresh.",
+      "reqIds": [
+        "REQ-2"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-an-analysis-prediction-function-that-takes-the-current-10-item-big-small-history-or-fewer-items-if-not-yet-10-and-outputs-a-next-step-prediction-signal-big-or-small-along-with-a-brief-explanation-of-the-factors-used-in-plain-english",
+      "title": "Implement an analysis + prediction function that takes the current 10-item Big/Small history (or fewer items if not yet 10) and outputs a next-step prediction signal: \"Big\" or \"Small\", along with a brief explanation of the factors used (in plain English).",
+      "reqIds": [
+        "REQ-3"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-results-panel-that-shows-1-the-current-10-item-running-history-in-chronological-order-and-2-the-latest-predicted-signal-big-small-with-a-timestamp-of-when-it-was-generated",
+      "title": "Add a results panel that shows: (1) the current 10-item running history in chronological order, and (2) the latest predicted signal (Big/Small) with a timestamp of when it was generated.",
+      "reqIds": [
+        "REQ-4"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-an-explicit-disclaimer-in-the-ui-stating-that-the-app-provides-heuristic-predictions-and-does-not-guarantee-accuracy-including-not-guaranteeing-99-99-accuracy",
+      "title": "Add an explicit disclaimer in the UI stating that the app provides heuristic predictions and does not guarantee accuracy (including not guaranteeing 99.99% accuracy).",
+      "reqIds": [
+        "REQ-5"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-define-and-apply-a-coherent-visual-theme-for-the-app-colors-typography-layout-and-component-styling-appropriate-for-a-trading-signal-dashboard-and-enforce-it-consistently-across-all-screens",
+      "title": "Define and apply a coherent visual theme for the app (colors, typography, layout, and component styling) appropriate for a trading-signal dashboard, and enforce it consistently across all screens.",
+      "reqIds": [
+        "REQ-6"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-remove-the-login-internet-identity-option-from-the-visible-ui-so-the-app-is-fully-usable-without-signing-in-no-login-logout-button-no-profile-name-display-and-no-profile-setup-dialog",
+      "title": "Remove the login/Internet Identity option from the visible UI so the app is fully usable without signing in (no login/logout button, no profile name display, and no profile setup dialog).",
+      "reqIds": [
+        "REQ-7"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-disable-per-user-backend-history-persistence-and-any-ui-messaging-about-saving-history-keeping-the-history-only-as-an-in-memory-local-ui-running-list-for-prediction-purposes",
+      "title": "Disable per-user backend history persistence and any UI messaging about saving history, keeping the history only as an in-memory/local UI running list for prediction purposes.",
+      "reqIds": [
+        "REQ-8"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-simplify-the-input-controls-so-that-tapping-big-immediately-adds-a-big-entry-and-tapping-small-immediately-adds-a-small-entry-remove-the-style-add-remove-controls",
+      "title": "Simplify the input controls so that tapping “Big” immediately adds a Big entry and tapping “Small” immediately adds a Small entry; remove the +/- style add/remove controls.",
+      "reqIds": [
+        "REQ-9"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-fix-the-issue-where-the-prediction-signal-is-not-appearing-by-ensuring-prediction-generation-works-for-anonymous-users-no-login-required",
+      "title": "Fix the issue where the prediction signal is not appearing by ensuring prediction generation works for anonymous users (no login required).",
+      "reqIds": [
+        "REQ-10"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-fix-the-tap-to-add-flow-so-that-tapping-the-big-or-small-buttons-immediately-adds-an-entry-to-the-same-history-state-that-is-rendered-in-the-results-panel-and-used-for-prediction-instead-of-updating-an-isolated-duplicate-history-state",
+      "title": "Fix the tap-to-add flow so that tapping the “Big” or “Small” buttons immediately adds an entry to the same history state that is rendered in the Results panel (and used for prediction), instead of updating an isolated/duplicate history state.",
+      "reqIds": [
+        "REQ-12"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-ensure-a-new-prediction-is-generated-automatically-after-each-successful-tap-to-add-for-history-length-1-and-the-prediction-results-panels-update-accordingly",
+      "title": "Ensure a new prediction is generated automatically after each successful tap-to-add (for history length >= 1), and the Prediction/Results panels update accordingly.",
+      "reqIds": [
+        "REQ-13"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-prevent-prediction-requests-from-firing-before-the-backend-actor-is-ready-in-the-no-login-anonymous-flow-so-the-ui-does-not-get-stuck-showing-prediction-failed-due-to-transient-actor-not-available-errors",
+      "title": "Prevent prediction requests from firing before the backend actor is ready in the no-login (anonymous) flow, so the UI does not get stuck showing “Prediction Failed” due to transient “Actor not available” errors.",
+      "reqIds": [
+        "REQ-14"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-separate-user-triggered-prediction-button-not-the-big-small-buttons-that-when-tapped-generates-the-next-prediction-quickly-using-the-current-in-memory-history-and-updates-the-prediction-results-panels",
+      "title": "Add a separate user-triggered \"Prediction\" button (not the Big/Small buttons) that, when tapped, generates the next prediction quickly using the current in-memory history and updates the Prediction/Results panels.",
+      "reqIds": [
+        "REQ-15"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-big-small-input-buttons-styling-so-that-the-big-button-is-yellow-and-the-small-button-is-blue-while-keeping-existing-tap-to-add-behavior-unchanged",
+      "title": "Update the Big/Small input buttons styling so that the Big button is yellow and the Small button is blue, while keeping existing tap-to-add behavior unchanged.",
+      "reqIds": [
+        "REQ-16"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-change-the-history-display-layout-so-entries-are-shown-side-by-side-in-a-numbered-grid-1-2-3-rather-than-stacked-vertically-in-a-single-column-list",
+      "title": "Change the history display layout so entries are shown side-by-side in a numbered grid (1,2,3...) rather than stacked vertically in a single column list.",
+      "reqIds": [
+        "REQ-17"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-increase-the-in-memory-rolling-history-capacity-from-10-entries-to-20-entries-and-update-all-ui-limits-disabling-logic-and-counters-that-currently-assume-a-10-item-maximum-to-instead-use-20",
+      "title": "Increase the in-memory rolling history capacity from 10 entries to 20 entries, and update all UI limits, disabling logic, and counters that currently assume a 10-item maximum to instead use 20.",
+      "reqIds": [
+        "REQ-18"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-change-the-results-panel-history-display-to-a-compact-two-line-two-row-layout-that-preserves-the-exact-chronological-order-the-user-entered-as-entered-sequence-rendered-in-a-small-condensed-style",
+      "title": "Change the Results panel history display to a compact two-line (two-row) layout that preserves the exact chronological order the user entered (as-entered sequence), rendered in a small/condensed style.",
+      "reqIds": [
+        "REQ-19"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-a-gated-input-flow-for-when-the-local-history-reaches-20-entries-show-a-user-triggered-next-button-only-when-history-is-full-20-20-while-history-is-full-and-next-has-not-been-pressed-disable-big-small-taps-after-the-user-presses-next-allow-exactly-one-subsequent-big-or-small-tap-when-that-tap-occurs-remove-the-oldest-entry-1-shift-remaining-entries-forward-and-append-the-new-entry-as-20-then-return-to-the-locked-state-since-the-history-is-full-again",
+      "title": "Implement a gated input flow for when the local history reaches 20 entries: show a user-triggered \"Next\" button only when history is full (20/20). While history is full and \"Next\" has not been pressed, disable Big/Small taps. After the user presses \"Next\", allow exactly one subsequent Big or Small tap; when that tap occurs, remove the oldest entry (#1), shift remaining entries forward, and append the new entry as #20, then return to the locked state (since the history is full again).",
+      "reqIds": [
+        "REQ-22"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-ensure-all-user-facing-ui-text-introduced-for-the-new-gated-flow-is-in-english-e-g-button-label-next-and-any-helper-text",
+      "title": "Ensure all user-facing UI text introduced for the new gated flow is in English (e.g., button label \"Next\" and any helper text).",
+      "reqIds": [
+        "REQ-23"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-perform-a-clean-rebuild-and-redeploy-of-the-current-frontend-backend-canisters-no-feature-changes-required-and-verify-the-deployed-url-loads-successfully-without-manual-cache-clearing",
+      "title": "Perform a clean rebuild and redeploy of the current frontend + backend canisters (no feature changes required) and verify the deployed URL loads successfully without manual cache clearing.",
+      "reqIds": [
+        "REQ-24"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-an-app-level-startup-fallback-so-the-ui-never-appears-as-a-blank-page-during-initialization-show-a-clear-english-loading-state-while-react-mounts-and-dependencies-initialize-and-a-clear-english-error-state-if-an-unexpected-render-time-error-occurs",
+      "title": "Add an app-level startup fallback so the UI never appears as a blank page during initialization; show a clear English loading state while React mounts and dependencies initialize, and a clear English error state if an unexpected render-time error occurs.",
+      "reqIds": [
+        "REQ-25"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-harden-prediction-initialization-so-the-app-remains-usable-even-if-the-backend-actor-is-temporarily-unavailable-at-startup-prevent-the-ui-from-getting-stuck-in-a-permanent-failure-state-and-allow-the-user-to-retry-once-the-actor-becomes-ready",
+      "title": "Harden prediction initialization so the app remains usable even if the backend actor is temporarily unavailable at startup; prevent the UI from getting stuck in a permanent failure state and allow the user to retry once the actor becomes ready.",
+      "reqIds": [
+        "REQ-26"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-improve-the-frontend-error-handling-for-prediction-failures-so-the-ui-provides-a-clear-english-reason-category-when-possible-e-g-backend-unavailable-vs-unexpected-error-and-always-offers-a-working-retry-action-that-re-attempts-prediction-generation",
+      "title": "Improve the frontend error handling for prediction failures so the UI provides a clear English reason category when possible (e.g., 'Backend unavailable' vs 'Unexpected error') and always offers a working retry action that re-attempts prediction generation.",
+      "reqIds": [
+        "REQ-29"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-fix-the-ui-regression-where-the-next-button-is-missing-ensure-the-next-button-is-visible-whenever-the-local-history-is-at-full-capacity-20-20-and-remains-visible-regardless-of-whether-the-gate-is-currently-locked-or-temporarily-unlocked-for-the-next-entry",
+      "title": "Fix the UI regression where the \"Next\" button is missing: ensure the \"Next\" button is visible whenever the local history is at full capacity (20/20), and remains visible regardless of whether the gate is currently locked or temporarily unlocked for the next entry.",
+      "reqIds": [
+        "REQ-30"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-ensure-the-20-20-gated-input-flow-works-end-to-end-with-correct-state-transitions-when-history-is-full-and-the-gate-is-locked-big-small-taps-are-disabled-pressing-next-unlocks-exactly-one-subsequent-big-small-tap-that-tap-removes-the-oldest-entry-and-appends-the-new-entry-to-keep-history-length-at-20-after-that-single-tap-big-small-is-disabled-again-until-next-is-pressed-again",
+      "title": "Ensure the 20/20 gated input flow works end-to-end with correct state transitions: when history is full and the gate is locked, Big/Small taps are disabled; pressing \"Next\" unlocks exactly one subsequent Big/Small tap; that tap removes the oldest entry and appends the new entry to keep history length at 20; after that single tap, Big/Small is disabled again until \"Next\" is pressed again.",
+      "reqIds": [
+        "REQ-31"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-minimal-automated-ui-level-check-or-component-level-test-to-prevent-regressions-where-the-next-button-does-not-appear-at-20-20-and-where-the-gate-does-not-re-lock-after-the-single-unlocked-entry-is-added",
+      "title": "Add a minimal automated UI-level check (or component-level test) to prevent regressions where the \"Next\" button does not appear at 20/20, and where the gate does not re-lock after the single unlocked entry is added.",
+      "reqIds": [
+        "REQ-32"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-fix-the-end-to-end-prediction-flow-so-that-anonymous-users-can-successfully-generate-a-prediction-from-the-current-in-memory-history-using-the-existing-backend-canister-endpoint-without-the-ui-getting-stuck-in-a-failed-state",
+      "title": "Fix the end-to-end prediction flow so that anonymous users can successfully generate a prediction from the current in-memory history using the existing backend canister endpoint, without the UI getting stuck in a failed state.",
+      "reqIds": [
+        "REQ-33"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-improve-frontend-diagnostics-and-recovery-for-prediction-failures-so-the-user-can-always-understand-what-went-wrong-in-english-and-can-successfully-recover-using-a-retry-action-once-the-backend-becomes-available",
+      "title": "Improve frontend diagnostics and recovery for prediction failures so the user can always understand what went wrong (in English) and can successfully recover using a retry action once the backend becomes available.",
+      "reqIds": [
+        "REQ-34"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-minimal-automated-frontend-test-check-that-verifies-prediction-can-be-triggered-from-non-empty-history-and-that-the-ui-transitions-from-idle-connecting-to-displaying-either-a-prediction-or-a-recoverable-error-state-with-a-working-retry",
+      "title": "Add a minimal automated frontend test/check that verifies prediction can be triggered from non-empty history and that the UI transitions from idle/connecting to displaying either a prediction or a recoverable error state with a working retry.",
+      "reqIds": [
+        "REQ-36"
+      ],
+      "version": 1
+    }
+  ],
+  "new_feature_requests": [
+    {
+      "id": "AR-2",
+      "summary": "Analyze the 10-item history and generate a next-step prediction: Big or Small",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-3",
+      "summary": "Display prediction output to the user (Big/Small signal)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-4",
+      "summary": "Target extremely high accuracy requirement (99.99%) for predictions",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-5",
+      "summary": "Remove login/Internet Identity and disable per-user backend history persistence",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-6",
+      "summary": "Simplify input UI: provide separate Big and Small buttons so a single tap immediately adds the result; remove +/- option controls",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-7",
+      "summary": "Fix issue where the prediction signal is not appearing (\"signal আসছে না\")",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-12",
+      "summary": "Update the backend canister so that the prediction endpoint can be called anonymously (without requiring AccessControl/#user permission), to support the no-login flow.",
+      "reqIds": [
+        "REQ-11"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-13",
+      "summary": "Fix tap-to-add Big/Small buttons so taps update the 10-item history list and trigger UI updates",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-14",
+      "summary": "Add a separate \"Prediction\" button; tapping it triggers prediction generation quickly (instead of relying only on auto-generation).",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-15",
+      "summary": "Update button colors: Big button yellow, Small button blue.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-16",
+      "summary": "Change history display layout to show items side-by-side with numbering (1,2,3...) rather than stacked vertically.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-17",
+      "summary": "Increase rolling history length from 10 items to 20 items and use the last 20 Big/Small results for analysis/prediction.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-18",
+      "summary": "Update history display to a compact two-line layout that shows the user's entered sequence in order (as entered), in small size.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-19",
+      "summary": "Improve prediction logic to automatically detect patterns/trends (including potential trend manipulation) to achieve higher practical accuracy.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-22",
+      "summary": "Update the backend prediction algorithm to analyze up to the last 20 Big/Small results (using the provided history argument) and improve pattern/trend detection so the prediction explanation reflects detected streaks, reversals, alternation (zig-zag), and short-term vs long-term bias; keep the explanation in plain English.",
+      "reqIds": [
+        "REQ-20"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-23",
+      "summary": "If backend history storage remains present, update any hard-coded 10-item cap in backend history storage functions to 20 so stored history behavior (if used) matches the 20-item model.",
+      "reqIds": [
+        "REQ-21"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-24",
+      "summary": "Add a conditional \"Next\" button that appears only when history is full (20). User must tap \"Next\" to re-enable Big/Small entry; after the next entry is added, drop the oldest (#1), shift remaining items forward, and place the new entry at #20 (rolling window).",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-25",
+      "summary": "Update the backend `predictNext(history)` endpoint so it works for anonymous callers (no Internet Identity) and does not require `AccessControl/#user` permission.",
+      "reqIds": [
+        "REQ-27"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-26",
+      "summary": "Fix any backend prediction-analysis logic that can trap at runtime for valid inputs (history length 1–20) so the frontend never shows 'Prediction Failed' due to out-of-bounds indexing or invalid loop ranges.",
+      "reqIds": [
+        "REQ-28"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-29",
+      "summary": "Harden the backend prediction endpoint so it never traps for valid inputs (history length 1–20, results of \"Big\"/\"Small\"), and always returns a valid prediction + explanation.",
+      "reqIds": [
+        "REQ-35"
+      ],
+      "status": "pending"
+    }
+  ],
+  "gameProjectType": "none",
+  "projectName": "Color Signal",
+  "clarification_mode": "instant",
+  "clarification_rounds": 0
+}

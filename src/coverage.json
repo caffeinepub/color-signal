@@ -1,0 +1,85 @@
+{
+  "kind": "coverage_report",
+  "version": "1.0",
+  "generatedAt": "2026-02-17T09:59:31.781Z",
+  "sources": {
+    "buildRequest": true,
+    "implementationPlan": true
+  },
+  "requirements": {
+    "total": 4,
+    "implemented": 3,
+    "items": [
+      {
+        "id": "REQ-33",
+        "summary": "Fix the end-to-end prediction flow so that anonymous users can successfully generate a prediction from the current in-memory history using the existing backend canister endpoint, without the UI getting stuck in a failed state.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/features/prediction/useActorConnection.ts",
+          "frontend/src/features/prediction/usePrediction.ts",
+          "frontend/src/hooks/useActor.ts",
+          "frontend/src/features/history/HistoryControls.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/features/prediction/useActorConnection.ts",
+          "frontend/src/features/prediction/usePrediction.ts",
+          "frontend/src/features/history/HistoryControls.tsx"
+        ]
+      },
+      {
+        "id": "REQ-34",
+        "summary": "Improve frontend diagnostics and recovery for prediction failures so the user can always understand what went wrong (in English) and can successfully recover using a retry action once the backend becomes available.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/features/prediction/usePrediction.ts",
+          "frontend/src/features/prediction/PredictionPanel.tsx",
+          "frontend/src/features/prediction/useActorConnection.ts"
+        ],
+        "matchedFiles": [
+          "frontend/src/features/prediction/usePrediction.ts",
+          "frontend/src/features/prediction/PredictionPanel.tsx",
+          "frontend/src/features/prediction/useActorConnection.ts"
+        ]
+      },
+      {
+        "id": "REQ-35",
+        "summary": "Harden the backend prediction endpoint so it never traps for valid inputs (history length 1–20, results of \"Big\"/\"Small\"), and always returns a valid prediction + explanation.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-36",
+        "summary": "Add a minimal automated frontend test/check that verifies prediction can be triggered from non-empty history and that the UI transitions from idle/connecting to displaying either a prediction or a recoverable error state with a working retry.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/features/prediction/predictionFlow.check.ts",
+          "frontend/src/main.tsx",
+          "frontend/src/features/history/HistoryControls.tsx",
+          "frontend/src/features/prediction/PredictionPanel.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/features/prediction/predictionFlow.check.ts",
+          "frontend/src/features/history/HistoryControls.tsx",
+          "frontend/src/features/prediction/PredictionPanel.tsx"
+        ]
+      }
+    ]
+  },
+  "changedFiles": [
+    "backend/main.mo",
+    "build-request.json",
+    "feature_evidence.json",
+    "frontend-file-summaries.txt",
+    "frontend-implementation-plan.json",
+    "frontend/src/features/history/HistoryControls.tsx",
+    "frontend/src/features/prediction/PredictionPanel.tsx",
+    "frontend/src/features/prediction/predictionFlow.check.ts",
+    "frontend/src/features/prediction/useActorConnection.ts",
+    "frontend/src/features/prediction/usePrediction.ts",
+    "project_state.json",
+    "scratch/component-selection.json",
+    "spec.md",
+    "spec_vs_diff_report.json"
+  ]
+}

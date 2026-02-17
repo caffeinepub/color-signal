@@ -1,0 +1,94 @@
+{
+  "kind": "build_request",
+  "title": "Fix prediction not working in latest deployment",
+  "projectName": "Color Signal",
+  "priority": "high",
+  "requirements": [
+    {
+      "id": "REQ-33",
+      "text": "Fix the end-to-end prediction flow so that anonymous users can successfully generate a prediction from the current in-memory history using the existing backend canister endpoint, without the UI getting stuck in a failed state.",
+      "target": "both",
+      "source": {
+        "messageIds": [
+          "msg-4"
+        ],
+        "quotes": [
+          "Prediction হচ্ছে না"
+        ]
+      },
+      "acceptanceCriteria": [
+        "With at least 1 history entry added, clicking the \"Prediction\" button results in a visible prediction (\"Big\" or \"Small\") and an explanation, without showing \"Prediction Failed\".",
+        "The prediction request must not be sent until the backend actor is ready; if the actor is not ready, the UI must remain usable and allow retry once ready.",
+        "The fix must work for anonymous (no Internet Identity) users."
+      ]
+    },
+    {
+      "id": "REQ-34",
+      "text": "Improve frontend diagnostics and recovery for prediction failures so the user can always understand what went wrong (in English) and can successfully recover using a retry action once the backend becomes available.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-4"
+        ],
+        "quotes": [
+          "Prediction হচ্ছে না"
+        ]
+      },
+      "acceptanceCriteria": [
+        "When prediction fails, the Prediction panel shows a clear English error category/message (e.g., backend unavailable vs network issue vs unexpected error).",
+        "The \"Retry Prediction\" action triggers a new prediction attempt using the current in-memory history and succeeds once the backend is available.",
+        "The UI must not require a full page refresh to recover from a transient actor/connection initialization failure."
+      ]
+    },
+    {
+      "id": "REQ-35",
+      "text": "Harden the backend prediction endpoint so it never traps for valid inputs (history length 1–20, results of \"Big\"/\"Small\"), and always returns a valid prediction + explanation.",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-4"
+        ],
+        "quotes": [
+          "Prediction হচ্ছে না"
+        ]
+      },
+      "acceptanceCriteria": [
+        "For any input history length from 1 to 20, the backend returns a BigSmallPrediction response without trapping.",
+        "For history items containing only \"Big\" and \"Small\" results, the backend returns a non-empty prediction string and a non-empty English explanation string.",
+        "If an unexpected/invalid value is encountered in history results, the backend still returns a safe fallback prediction + explanation rather than trapping."
+      ]
+    },
+    {
+      "id": "REQ-36",
+      "text": "Add a minimal automated frontend test/check that verifies prediction can be triggered from non-empty history and that the UI transitions from idle/connecting to displaying either a prediction or a recoverable error state with a working retry.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-4"
+        ],
+        "quotes": [
+          "Prediction হচ্ছে না"
+        ]
+      },
+      "acceptanceCriteria": [
+        "A test (or minimal component-level check) exists that simulates: add 1 history entry → click \"Prediction\" → ensure a request is attempted and UI does not remain permanently stuck in \"Prediction Failed\" without a working retry path.",
+        "The test/check covers the case where the actor is not ready initially and becomes ready after a retry, and confirms the retry path is callable."
+      ]
+    }
+  ],
+  "constraints": [
+    "Use English for any user-facing UI text introduced or modified by this change.",
+    "Backend must remain a single Motoko actor in backend/main.mo; add backend changes there only (create backend/migration.mo only if state upgrade is required).",
+    "Do not edit any files under frontend/src/components/ui or other immutable paths listed in SYSTEM_CONTEXT; compose existing UI components instead.",
+    "Do not reintroduce Internet Identity login UI; the app must remain usable anonymously."
+  ],
+  "nonGoals": [
+    "Do not add new authentication providers or any third-party auth flows.",
+    "Do not add external databases or non-Internet-Computer backend services.",
+    "Do not promise or implement a guaranteed prediction accuracy target (e.g., 99.99%); focus only on reliability and correct functioning."
+  ],
+  "imageRequirements": {
+    "required": [],
+    "edits": []
+  }
+}

@@ -1,0 +1,68 @@
+{
+  "kind": "feature_evidence_report",
+  "features": [
+    {
+      "featureId": "feature-fix-the-end-to-end-prediction-flow-so-that-anonymous-users-can-successfully-generate-a-prediction-from-the-current-in-memory-history-using-the-existing-backend-canister-endpoint-without-the-ui-getting-stuck-in-a-failed-state",
+      "featureTitle": "Fix the end-to-end prediction flow so that anonymous users can successfully generate a prediction from the current in-memory history using the existing backend canister endpoint, without the UI getting stuck in a failed state.",
+      "files": [
+        "frontend/src/features/history/HistoryControls.tsx",
+        "frontend/src/features/prediction/useActorConnection.ts",
+        "frontend/src/features/prediction/usePrediction.ts"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-33"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-improve-frontend-diagnostics-and-recovery-for-prediction-failures-so-the-user-can-always-understand-what-went-wrong-in-english-and-can-successfully-recover-using-a-retry-action-once-the-backend-becomes-available",
+      "featureTitle": "Improve frontend diagnostics and recovery for prediction failures so the user can always understand what went wrong (in English) and can successfully recover using a retry action once the backend becomes available.",
+      "files": [
+        "frontend/src/features/prediction/PredictionPanel.tsx",
+        "frontend/src/features/prediction/useActorConnection.ts",
+        "frontend/src/features/prediction/usePrediction.ts"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-34"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-add-a-minimal-automated-frontend-test-check-that-verifies-prediction-can-be-triggered-from-non-empty-history-and-that-the-ui-transitions-from-idle-connecting-to-displaying-either-a-prediction-or-a-recoverable-error-state-with-a-working-retry",
+      "featureTitle": "Add a minimal automated frontend test/check that verifies prediction can be triggered from non-empty history and that the UI transitions from idle/connecting to displaying either a prediction or a recoverable error state with a working retry.",
+      "files": [
+        "frontend/src/features/history/HistoryControls.tsx",
+        "frontend/src/features/prediction/PredictionPanel.tsx",
+        "frontend/src/features/prediction/predictionFlow.check.ts"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-36"
+      ],
+      "confidence": "high"
+    }
+  ]
+}

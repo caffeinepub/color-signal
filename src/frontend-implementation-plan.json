@@ -1,0 +1,94 @@
+{
+  "kind": "implementation_plan",
+  "version": "1.0",
+  "title": "Color Signal – Restore reliable anonymous prediction flow with better recovery + minimal check",
+  "requirements": [
+    {
+      "id": "REQ-33",
+      "summary": "Fix prediction flow to wait for actor readiness, work for anonymous users, and avoid stuck failed UI state.",
+      "acceptanceCriteria": [
+        "With at least 1 history entry added, clicking the \"Prediction\" button results in a visible prediction (\"Big\" or \"Small\") and an explanation, without showing \"Prediction Failed\".",
+        "The prediction request must not be sent until the backend actor is ready; if the actor is not ready, the UI must remain usable and allow retry once ready.",
+        "The fix must work for anonymous (no Internet Identity) users."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/features/prediction/useActorConnection.ts",
+          "operation": "modify",
+          "description": "Fix actor retry/invalidation so it actually refreshes the actor query used by useActor (align invalidation with the ACTOR query key shape), enabling recovery after an initialization failure without page refresh."
+        },
+        {
+          "path": "frontend/src/features/prediction/usePrediction.ts",
+          "operation": "modify",
+          "description": "Ensure prediction generation never attempts a backend call until the actor is ready, and prevent the UI from remaining in a stale failure state by clearing/refreshing relevant prediction error state when actor readiness transitions to ready."
+        },
+        {
+          "path": "frontend/src/hooks/useActor.ts",
+          "operation": "modify",
+          "description": "Keep anonymous actor creation as the default path (no Internet Identity required) and add an optional debug-only initialization delay via URL param to support the automated prediction flow check without impacting normal users."
+        },
+        {
+          "path": "frontend/src/features/history/HistoryControls.tsx",
+          "operation": "modify",
+          "description": "Add stable test hooks (data-testid) for the Prediction button and ensure the button remains usable (not permanently disabled) once connection becomes ready, supporting retry-driven recovery."
+        }
+      ]
+    },
+    {
+      "id": "REQ-34",
+      "summary": "Improve prediction failure diagnostics (English) and provide a reliable retry path without page refresh.",
+      "acceptanceCriteria": [
+        "When prediction fails, the Prediction panel shows a clear English error category/message (e.g., backend unavailable vs network issue vs unexpected error).",
+        "The \"Retry Prediction\" action triggers a new prediction attempt using the current in-memory history and succeeds once the backend is available.",
+        "The UI must not require a full page refresh to recover from a transient actor/connection initialization failure."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/features/prediction/usePrediction.ts",
+          "operation": "modify",
+          "description": "Refine error categorization to produce clear English categories/messages (backend unavailable vs network issue vs unexpected), and ensure retry always uses current in-memory history with consistent state transitions."
+        },
+        {
+          "path": "frontend/src/features/prediction/PredictionPanel.tsx",
+          "operation": "modify",
+          "description": "Update the error UI to display an English error category/title and actionable guidance; ensure Retry Prediction and Retry Connection are always visible when applicable and add data-testid hooks for error and retry states."
+        },
+        {
+          "path": "frontend/src/features/prediction/useActorConnection.ts",
+          "operation": "modify",
+          "description": "Expose/maintain recovery-friendly connection state (ready/connecting/error) so the Prediction panel can distinguish backend initialization issues from request failures and trigger a working retry."
+        }
+      ]
+    },
+    {
+      "id": "REQ-36",
+      "summary": "Add a minimal automated frontend check to verify prediction triggering, non-stuck UI states, and working retry when actor becomes ready.",
+      "acceptanceCriteria": [
+        "A test (or minimal component-level check) exists that simulates: add 1 history entry → click \"Prediction\" → ensure a request is attempted and UI does not remain permanently stuck in \"Prediction Failed\" without a working retry path.",
+        "The test/check covers the case where the actor is not ready initially and becomes ready after a retry, and confirms the retry path is callable."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/features/prediction/predictionFlow.check.ts",
+          "operation": "create",
+          "description": "Create a minimal automated browser-executed check that uses DOM interactions (via data-testid selectors) to: add one history entry, attempt prediction, verify UI reaches either a prediction display or a recoverable error state with retry controls, and then triggers retry once actor becomes available."
+        },
+        {
+          "path": "frontend/src/main.tsx",
+          "operation": "modify",
+          "description": "Wire the minimal check to run only when a dedicated URL param is present (e.g., checkPrediction=1), so it can be executed in automation/CI without affecting normal users."
+        },
+        {
+          "path": "frontend/src/features/history/HistoryControls.tsx",
+          "operation": "modify",
+          "description": "Add/ensure data-testid attributes needed by the automated check for: Prediction button (and keep existing Big/Small buttons), enabling deterministic selection and clicks."
+        },
+        {
+          "path": "frontend/src/features/prediction/PredictionPanel.tsx",
+          "operation": "modify",
+          "description": "Add/ensure data-testid attributes for key states used by the automated check (e.g., prediction rendered, error rendered, retry prediction button, retry connection button)."
+        }
+      ]
+    }
+  ]
+}
