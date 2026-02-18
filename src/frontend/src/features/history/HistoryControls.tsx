@@ -29,7 +29,7 @@ export default function HistoryControls({
   isConnecting = false,
   connectionHint,
 }: HistoryControlsProps) {
-  const isHistoryFull = historyCount === 20;
+  const isHistoryFull = historyCount === 30;
   
   // Big/Small buttons are disabled when history is full AND not unlocked
   const areBigSmallButtonsDisabled = isHistoryFull && !isUnlockedForNextEntry;
@@ -61,7 +61,7 @@ export default function HistoryControls({
             </CardDescription>
           </div>
           <Badge variant="outline" className="text-lg font-semibold">
-            {historyCount}/20
+            {historyCount}/30
           </Badge>
         </div>
       </CardHeader>
@@ -96,8 +96,8 @@ export default function HistoryControls({
           </Button>
         </div>
 
-        {/* Next Button - shown whenever history count is exactly 20 */}
-        {historyCount === 20 && (
+        {/* Next Button - shown whenever history count is exactly 30 */}
+        {historyCount === 30 && (
           <Button
             onClick={onNext}
             variant="secondary"

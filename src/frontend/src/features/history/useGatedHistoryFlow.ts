@@ -9,8 +9,8 @@ interface GatedHistoryFlowState {
 }
 
 /**
- * Hook that manages the 20/20 gated flow state machine:
- * - Locked at 20/20 (Big/Small disabled)
+ * Hook that manages the 30/30 gated flow state machine:
+ * - Locked at 30/30 (Big/Small disabled)
  * - Unlock exactly one add after "Next" is pressed
  * - Immediately re-lock after that single add
  * Uses a ref-backed token to prevent double-tap acceptance before React state updates
@@ -19,14 +19,14 @@ export function useGatedHistoryFlow(historyCount: number): GatedHistoryFlowState
   const [isUnlockedForNextEntry, setIsUnlockedForNextEntry] = useState(false);
   const unlockTokenRef = useRef(0);
 
-  // Reset gate when history drops below 20
-  if (historyCount < 20 && isUnlockedForNextEntry) {
+  // Reset gate when history drops below 30
+  if (historyCount < 30 && isUnlockedForNextEntry) {
     setIsUnlockedForNextEntry(false);
     unlockTokenRef.current = 0;
   }
 
   const handleNext = useCallback(() => {
-    if (historyCount === 20) {
+    if (historyCount === 30) {
       setIsUnlockedForNextEntry(true);
       unlockTokenRef.current = 1; // Grant exactly one token
     }
@@ -35,13 +35,13 @@ export function useGatedHistoryFlow(historyCount: number): GatedHistoryFlowState
   const handleAddEntry = useCallback(
     (result: BigSmallResult, addToHistory: (result: BigSmallResult) => void) => {
       // If history is not full, allow adding freely
-      if (historyCount < 20) {
+      if (historyCount < 30) {
         addToHistory(result);
         return;
       }
 
-      // If history is full (20 items), only allow if we have a token
-      if (historyCount === 20 && unlockTokenRef.current > 0) {
+      // If history is full (30 items), only allow if we have a token
+      if (historyCount === 30 && unlockTokenRef.current > 0) {
         // Consume the token immediately (synchronous guard)
         unlockTokenRef.current = 0;
         addToHistory(result);

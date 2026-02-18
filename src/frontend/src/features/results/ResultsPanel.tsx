@@ -20,9 +20,10 @@ export default function ResultsPanel({ history, prediction, lastGeneratedAt }: R
     });
   };
 
-  // Split history into two rows: items 1-10 and items 11-20
+  // Split history into three rows: items 1-10, items 11-20, and items 21-30
   const firstRow = history.slice(0, 10);
   const secondRow = history.slice(10, 20);
+  const thirdRow = history.slice(20, 30);
 
   return (
     <Card className="border-border/50 bg-card/50 backdrop-blur">
@@ -58,10 +59,10 @@ export default function ResultsPanel({ history, prediction, lastGeneratedAt }: R
           </div>
         )}
 
-        {/* Compact Two-Line History */}
+        {/* Compact Three-Line History */}
         <div className="space-y-3">
           <label className="text-sm font-medium text-muted-foreground">
-            History ({history.length}/20)
+            History ({history.length}/30)
           </label>
           {history.length === 0 ? (
             <div className="flex items-center justify-center rounded-lg border border-dashed border-border py-8 text-center">
@@ -98,6 +99,24 @@ export default function ResultsPanel({ history, prediction, lastGeneratedAt }: R
                       }`}
                     >
                       {index + 11}. {item.result}
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              {/* Third Row: Items 21-30 */}
+              {thirdRow.length > 0 && (
+                <div className="flex flex-wrap items-center gap-2">
+                  {thirdRow.map((item, index) => (
+                    <span
+                      key={index + 20}
+                      className={`inline-flex items-center gap-1 rounded px-2 py-1 text-sm font-medium ${
+                        item.result === 'Big'
+                          ? 'bg-yellow-500/20 text-yellow-600 dark:text-yellow-400'
+                          : 'bg-blue-500/20 text-blue-600 dark:text-blue-400'
+                      }`}
+                    >
+                      {index + 21}. {item.result}
                     </span>
                   ))}
                 </div>

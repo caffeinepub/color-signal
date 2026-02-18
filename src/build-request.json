@@ -1,91 +1,146 @@
 {
   "kind": "build_request",
-  "title": "Fix prediction not working in latest deployment",
+  "title": "Increase rolling history capacity from 20 to 30 without changing any other behavior",
   "projectName": "Color Signal",
-  "priority": "high",
+  "priority": "normal",
   "requirements": [
     {
-      "id": "REQ-33",
-      "text": "Fix the end-to-end prediction flow so that anonymous users can successfully generate a prediction from the current in-memory history using the existing backend canister endpoint, without the UI getting stuck in a failed state.",
-      "target": "both",
-      "source": {
-        "messageIds": [
-          "msg-4"
-        ],
-        "quotes": [
-          "Prediction হচ্ছে না"
-        ]
-      },
-      "acceptanceCriteria": [
-        "With at least 1 history entry added, clicking the \"Prediction\" button results in a visible prediction (\"Big\" or \"Small\") and an explanation, without showing \"Prediction Failed\".",
-        "The prediction request must not be sent until the backend actor is ready; if the actor is not ready, the UI must remain usable and allow retry once ready.",
-        "The fix must work for anonymous (no Internet Identity) users."
-      ]
-    },
-    {
-      "id": "REQ-34",
-      "text": "Improve frontend diagnostics and recovery for prediction failures so the user can always understand what went wrong (in English) and can successfully recover using a retry action once the backend becomes available.",
+      "id": "REQ-37",
+      "text": "Increase the local in-memory rolling history capacity from 20 entries to 30 entries, while preserving the existing as-entered chronological order and all current behaviors (tap-to-add, prediction triggering, and UI layout style) unchanged except where counts/limits must reflect 30.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-4"
+          "recent-1"
         ],
         "quotes": [
-          "Prediction হচ্ছে না"
+          "ok করো \" তবে আর বাকি সবকিছুই 100% আগের মতোই থাকবে একটুও change যাতে না হয়"
         ]
       },
       "acceptanceCriteria": [
-        "When prediction fails, the Prediction panel shows a clear English error category/message (e.g., backend unavailable vs network issue vs unexpected error).",
-        "The \"Retry Prediction\" action triggers a new prediction attempt using the current in-memory history and succeeds once the backend is available.",
-        "The UI must not require a full page refresh to recover from a transient actor/connection initialization failure."
+        "The app allows adding history entries until the visible counter reaches 30/30.",
+        "When more than 30 entries would be added, history remains a rolling window capped at 30 entries (no crashes, no duplicate lists).",
+        "The history order remains the same as currently displayed/used (as-entered sequence), with numbering continuing to reflect the current order logic (do not reverse)."
       ]
     },
     {
-      "id": "REQ-35",
-      "text": "Harden the backend prediction endpoint so it never traps for valid inputs (history length 1–20, results of \"Big\"/\"Small\"), and always returns a valid prediction + explanation.",
+      "id": "REQ-38",
+      "text": "Update the gated input flow to operate at 30/30 instead of 20/20: show the \"Next\" button whenever historyCount is 30; when historyCount is 30 and the gate is locked, disable Big/Small taps; pressing \"Next\" unlocks exactly one subsequent Big/Small tap; that single tap appends the new entry while keeping history length at 30 (oldest entry drops off), and then the gate re-locks until \"Next\" is pressed again.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "recent-1"
+        ],
+        "quotes": [
+          "ok করো \" তবে আর বাকি সবকিছুই 100% আগের মতোই থাকবে একটুও change যাতে না হয়"
+        ]
+      },
+      "acceptanceCriteria": [
+        "The \"Next\" button is visible when (and only when) historyCount is exactly 30.",
+        "At 30/30 and locked, Big/Small buttons are disabled; after pressing \"Next\", exactly one Big/Small tap is accepted; immediately after that tap, Big/Small becomes disabled again until \"Next\" is pressed again.",
+        "After the single allowed tap at full history, the history still shows 30 items and reflects a correct rolling window (one oldest entry removed, one new entry appended).",
+        "All user-facing text introduced/updated for the gating flow remains in English (e.g., \"Next\", helper text)."
+      ]
+    },
+    {
+      "id": "REQ-39",
+      "text": "Update all UI counters, helper text, and any hard-coded references from 20 to 30 so the interface consistently reflects the new 30-entry maximum without changing styling, component structure, or interactions beyond the required numeric updates.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "recent-1"
+        ],
+        "quotes": [
+          "ok করো \" তবে আর বাকি সবকিছুই 100% আগের মতোই থাকবে একটুও change যাতে না হয়"
+        ]
+      },
+      "acceptanceCriteria": [
+        "The Add Results badge shows X/30 (not X/20).",
+        "The Results history label shows History (X/30).",
+        "Any helper text that refers to being full reflects 30/30."
+      ]
+    },
+    {
+      "id": "REQ-40",
+      "text": "Update the Results panel compact history visualization to render 30 entries in the same compact style, preserving the as-entered order and numbered labels, by extending the existing two-line layout to accommodate 30 items (e.g., three rows of 10) without changing the overall look-and-feel of the panel.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "recent-1"
+        ],
+        "quotes": [
+          "ok করো \" তবে আর বাকি সবকিছুই 100% আগের মতোই থাকবে একটুও change যাতে না হয়"
+        ]
+      },
+      "acceptanceCriteria": [
+        "With 1–30 entries, the Results panel shows all entries with correct numbering and the same color styling rules (Big=yellow, Small=blue).",
+        "With 30 entries, all 30 are visible in the compact layout (no truncation) and the order matches the in-memory history sequence used for prediction.",
+        "The panel continues to render correctly on typical mobile viewport widths (no overlapping text that makes entries unreadable)."
+      ]
+    },
+    {
+      "id": "REQ-41",
+      "text": "Update the prediction request payload usage so predictions continue to work using the current in-memory history up to 30 items, and ensure no frontend logic assumes a 20-item maximum when generating or retrying predictions.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "recent-1"
+        ],
+        "quotes": [
+          "ok করো \" তবে আর বাকি সবকিছুই 100% আগের মতোই থাকবে একটুও change যাতে না হয়"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Predictions can be generated successfully when history length is 1, 20, and 30.",
+        "Retry behavior continues to work and uses the current in-memory history (up to 30) without errors."
+      ]
+    },
+    {
+      "id": "REQ-42",
+      "text": "Update the backend history cap used by any remaining history storage utilities from 20 to 30 so internal limits do not conflict with the new 30-entry model, without re-introducing login requirements or changing the anonymous prediction flow.",
       "target": "backend",
       "source": {
         "messageIds": [
-          "msg-4"
+          "recent-1"
         ],
         "quotes": [
-          "Prediction হচ্ছে না"
+          "ok করো \" তবে আর বাকি সবকিছুই 100% আগের মতোই থাকবে একটুও change যাতে না হয়"
         ]
       },
       "acceptanceCriteria": [
-        "For any input history length from 1 to 20, the backend returns a BigSmallPrediction response without trapping.",
-        "For history items containing only \"Big\" and \"Small\" results, the backend returns a non-empty prediction string and a non-empty English explanation string.",
-        "If an unexpected/invalid value is encountered in history results, the backend still returns a safe fallback prediction + explanation rather than trapping."
+        "Any backend capping logic that currently enforces 20 entries enforces 30 entries instead.",
+        "The backend predictNext(history) continues to accept and process histories up to length 30 without trapping.",
+        "Anonymous callers can still call predictNext(history) (no new authorization checks added)."
       ]
     },
     {
-      "id": "REQ-36",
-      "text": "Add a minimal automated frontend test/check that verifies prediction can be triggered from non-empty history and that the UI transitions from idle/connecting to displaying either a prediction or a recoverable error state with a working retry.",
+      "id": "REQ-43",
+      "text": "Update the existing automated frontend prediction flow check (the DOM-based script) so it remains valid after switching to a 30-entry maximum (no assertions/logic that assume a 20-entry limit).",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-4"
+          "recent-1"
         ],
         "quotes": [
-          "Prediction হচ্ছে না"
+          "ok করো \" তবে আর বাকি সবকিছুই 100% আগের মতোই থাকবে একটুও change যাতে না হয়"
         ]
       },
       "acceptanceCriteria": [
-        "A test (or minimal component-level check) exists that simulates: add 1 history entry → click \"Prediction\" → ensure a request is attempted and UI does not remain permanently stuck in \"Prediction Failed\" without a working retry path.",
-        "The test/check covers the case where the actor is not ready initially and becomes ready after a retry, and confirms the retry path is callable."
+        "Running the check via ?checkPrediction=1 still produces a PASS when backend is available.",
+        "The check does not fail due to any hard-coded 20-entry assumptions."
       ]
     }
   ],
   "constraints": [
-    "Use English for any user-facing UI text introduced or modified by this change.",
-    "Backend must remain a single Motoko actor in backend/main.mo; add backend changes there only (create backend/migration.mo only if state upgrade is required).",
-    "Do not edit any files under frontend/src/components/ui or other immutable paths listed in SYSTEM_CONTEXT; compose existing UI components instead.",
-    "Do not reintroduce Internet Identity login UI; the app must remain usable anonymously."
+    "Do not change any existing behaviors, styling, layout structure, or user-facing flows other than updating limits/counters/gating from 20 to 30 where strictly required.",
+    "Keep all user-facing UI text in English.",
+    "Frontend immutable paths must not be modified: frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useInternetIdentity.tsx, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, frontend/src/components/ui.",
+    "Backend must remain a single Motoko actor in backend/main.mo; only add migration code if an upgrade requires state changes."
   ],
   "nonGoals": [
-    "Do not add new authentication providers or any third-party auth flows.",
-    "Do not add external databases or non-Internet-Computer backend services.",
-    "Do not promise or implement a guaranteed prediction accuracy target (e.g., 99.99%); focus only on reliability and correct functioning."
+    "Do not add or reintroduce Internet Identity login/logout UI or per-user persistence messaging.",
+    "Do not redesign the visual theme or change button colors (Big must remain yellow; Small must remain blue).",
+    "Do not claim or implement any guaranteed accuracy target (e.g., 99.99%); only adjust the history window size to 30.",
+    "Do not add new backend services or external databases."
   ],
   "imageRequirements": {
     "required": [],

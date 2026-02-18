@@ -8,7 +8,9 @@ import Int "mo:core/Int";
 import Iter "mo:core/Iter";
 import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
+import Migration "migration";
 
+(with migration = Migration.run)
 actor {
   let accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
@@ -64,8 +66,8 @@ actor {
 
     currentHistory.add(newEntry);
 
-    // Cap at 20 entries
-    if (currentHistory.size() > 20) {
+    // Cap at 30 entries
+    if (currentHistory.size() > 30) {
       _removeFirst(currentHistory);
     };
 

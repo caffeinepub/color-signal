@@ -1,58 +1,59 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-17T09:59:31.777Z",
-  "summary": "Diff adds frontend gating/retry and diagnostics for prediction flow plus a minimal URL-triggered check. Backend prediction function was modified, but evidence is truncated and does not clearly show full hardening for invalid history values or trap-free behavior across all valid inputs. Several unrelated frontend changes appear present (auth/profile UI, theme/styling, layout), which were not requested and may conflict with constraints.",
+  "generatedAt": "2026-02-18T08:21:18.478Z",
+  "summary": "Diff implements several 20→30 updates in frontend local history, gated flow UI, results counters/layout, and backend history capping. However, the diff also introduces/extends authentication/authorization and profile/history persistence behaviors not requested, and there is no concrete diff evidence that the DOM-based ?checkPrediction=1 automated check was updated for 30.",
   "missing_requirements": [
     {
-      "id": "REQ-35",
-      "requirement": "Harden the backend prediction endpoint so it never traps for valid inputs (history length 1–20, results of \"Big\"/\"Small\"), and returns a safe fallback prediction + explanation if unexpected/invalid values are encountered.",
-      "reason": "The modified backend predictNext implementation shown calls helper functions (e.g., countResults, calculateLongestStreak, checkShortTermTrend) but the diff excerpt is truncated and does not show explicit validation/guarding for unexpected history.result values or any explicit no-trap guarantees across all history lengths 1–20. No fallback handling for invalid values is evident in the visible excerpt.",
+      "id": "REQ-41",
+      "requirement": "Update the prediction request payload usage so predictions continue to work using the current in-memory history up to 30 items, and ensure no frontend logic assumes a 20-item maximum when generating or retrying predictions.",
+      "reason": "The diff summary does not show any modified prediction-request/payload code (e.g., prediction hook / request construction) to confirm removal of any 20-item assumptions; only history/gating/UI and backend cap changes are directly evidenced.",
       "evidence": [
-        "backend/main.mo (truncated: predictNext uses countResults/calculateLongestStreak/checkShortTermTrend; no visible invalid-value fallback handling)"
+        "MODIFIED files list does not include any prediction-related file; only HistoryControls.tsx, useGatedHistoryFlow.ts, useLocalHistory.ts, ResultsPanel.tsx, backend/main.mo are shown with content"
+      ]
+    },
+    {
+      "id": "REQ-43",
+      "requirement": "Update the existing automated frontend prediction flow check (the DOM-based script) so it remains valid after switching to a 30-entry maximum (no assertions/logic that assume a 20-entry limit).",
+      "reason": "No diff evidence shows changes to the checkPrediction=1 logic (commonly in frontend/src/main.tsx per the project), and frontend/src/main.tsx is not listed among modified files with content showing updated assertions.",
+      "evidence": [
+        "MODIFIED files list does not include frontend/src/main.tsx with any shown changes to checkPrediction logic"
       ]
     }
   ],
   "hallucinated_features": [
     {
-      "description": "Internet Identity login/logout UI and related authenticated profile/setup flows were modified/added, despite the request explicitly stating not to reintroduce Internet Identity login UI and to keep the app usable anonymously.",
-      "reason": "BuildRequest constraints/non-goals prohibit reintroducing Internet Identity login UI or adding auth flows; diff summary indicates changes to LoginButton, ProfileSetupDialog, and identity-dependent hooks.",
+      "description": "Added/expanded backend authorization and per-user profile/history persistence APIs (userProfiles, AccessControl permission checks, saveCallerUserProfile, getUserProfile, saveHistoryEntry, getHistory) which introduce login/authorization requirements for history/profile operations.",
+      "reason": "BuildRequest explicitly states not to reintroduce login requirements/UI or change anonymous prediction flow beyond 20→30 limit updates; these authorization/profile features are beyond the requested scope of increasing history capacity.",
       "evidence": [
-        "frontend-file-summaries.txt (mentions frontend/src/features/auth/LoginButton.tsx, ProfileSetupDialog.tsx, useCallerUserProfile.ts, and Internet Identity provider in frontend/src/main.tsx)",
-        "frontend/src/features/prediction/useActorConnection.ts (imports useInternetIdentity and uses identity principal in query key)"
+        "backend/main.mo (shows AccessControl/MixinAuthorization usage and multiple Runtime.trap(\"Unauthorized...\") checks; userProfiles and historyStore keyed by Principal; saveCallerUserProfile/getUserProfile/saveHistoryEntry/getHistory added/used)"
       ]
     },
     {
-      "description": "Significant visual/theme/styling changes (global CSS, Tailwind config, dashboard aesthetic, loading fallback) not requested as part of fixing prediction reliability.",
-      "reason": "BuildRequest focuses on fixing prediction flow reliability and diagnostics; diff summary includes broad styling/theme changes unrelated to the requested fix.",
+      "description": "Introduced a migration module and wired upgrade migration logic (Migration.run) despite the requested change being a simple capacity increase (20→30) and the constraint to add migration only if an upgrade requires state changes.",
+      "reason": "The BuildRequest only requires changing caps from 20 to 30; adding explicit migration trimming logic and wiring it into the actor is extra behavior not clearly required by the diff evidence.",
       "evidence": [
-        "frontend-file-summaries.txt (mentions frontend/index.css, frontend/src/index.css, frontend/tailwind.config.js, frontend/index.html loading fallback)"
+        "backend/migration.mo (new file: trims history to 30 in migration)",
+        "backend/main.mo (\"with migration = Migration.run\")"
       ]
     },
     {
-      "description": "Results panel layout change (two-row compact history display) and other dashboard UI enhancements not requested in this fix.",
-      "reason": "Not part of REQ-33–REQ-36 scope; appears unrelated to prediction failure reliability/diagnostics/testing.",
+      "description": "Frontend includes (or references) Internet Identity login/logout UI and profile setup flows (LoginButton, ProfileSetupDialog, caller profile hooks) which are explicitly listed as non-goals to add or reintroduce.",
+      "reason": "Non-goals explicitly forbid adding/reintroducing Internet Identity login/logout UI or per-user persistence messaging; the diff summary text indicates these components exist/are described.",
       "evidence": [
-        "frontend-file-summaries.txt (mentions frontend/src/features/results/ResultsPanel.tsx updated layout)"
-      ]
-    },
-    {
-      "description": "Added/updated disclaimer component beyond the scope of prediction flow fix.",
-      "reason": "Disclaimer/accuracy messaging was explicitly listed as a non-goal (do not promise accuracy targets) and not requested to be modified/added here; changes appear unrelated to prediction flow reliability.",
-      "evidence": [
-        "frontend-file-summaries.txt (mentions frontend/src/features/disclaimer/Disclaimer.tsx)"
+        "frontend-file-summaries.txt (entries describing frontend/src/features/auth/LoginButton.tsx, frontend/src/features/auth/ProfileSetupDialog.tsx, frontend/src/features/auth/useCallerUserProfile.ts, and user profile management)"
       ]
     }
   ],
-  "confidence": 0.62,
+  "confidence": 0.64,
   "changed_files": [
     "backend/main.mo",
+    "backend/migration.mo",
     "frontend-file-summaries.txt",
     "frontend/src/features/history/HistoryControls.tsx",
-    "frontend/src/features/prediction/PredictionPanel.tsx",
-    "frontend/src/features/prediction/predictionFlow.check.ts",
-    "frontend/src/features/prediction/useActorConnection.ts",
-    "frontend/src/features/prediction/usePrediction.ts",
+    "frontend/src/features/history/useGatedHistoryFlow.ts",
+    "frontend/src/features/history/useLocalHistory.ts",
+    "frontend/src/features/results/ResultsPanel.tsx",
     "project_state.json"
   ]
 }

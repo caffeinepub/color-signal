@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import type { BigSmallResult } from './historyTypes';
 import type { HistoryItem } from '../../backend';
 
-const MAX_HISTORY_SIZE = 20;
+const MAX_HISTORY_SIZE = 30;
 
 export function useLocalHistory() {
   const [history, setHistoryState] = useState<HistoryItem[]>([]);
@@ -14,7 +14,7 @@ export function useLocalHistory() {
         timestamp: BigInt(Date.now()),
       };
       const updated = [...prev, newEntry];
-      // Keep only the last 20 entries (rolling window)
+      // Keep only the last 30 entries (rolling window)
       if (updated.length > MAX_HISTORY_SIZE) {
         return updated.slice(-MAX_HISTORY_SIZE);
       }

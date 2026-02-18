@@ -1,82 +1,102 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-17T09:59:31.781Z",
+  "generatedAt": "2026-02-18T08:21:18.482Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 4,
-    "implemented": 3,
+    "total": 7,
+    "implemented": 4,
     "items": [
       {
-        "id": "REQ-33",
-        "summary": "Fix the end-to-end prediction flow so that anonymous users can successfully generate a prediction from the current in-memory history using the existing backend canister endpoint, without the UI getting stuck in a failed state.",
+        "id": "REQ-37",
+        "summary": "Increase the local in-memory rolling history capacity from 20 entries to 30 entries, while preserving the existing as-entered chronological order and all current behaviors (tap-to-add, prediction triggering, and UI layout style) unchanged except where counts/limits must reflect 30.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/features/prediction/useActorConnection.ts",
-          "frontend/src/features/prediction/usePrediction.ts",
-          "frontend/src/hooks/useActor.ts",
+          "frontend/src/features/history/useLocalHistory.ts"
+        ],
+        "matchedFiles": [
+          "frontend/src/features/history/useLocalHistory.ts"
+        ]
+      },
+      {
+        "id": "REQ-38",
+        "summary": "Update the gated input flow to operate at 30/30 instead of 20/20: show the \"Next\" button whenever historyCount is 30; when historyCount is 30 and the gate is locked, disable Big/Small taps; pressing \"Next\" unlocks exactly one subsequent Big/Small tap; that single tap appends the new entry while keeping history length at 30 (oldest entry drops off), and then the gate re-locks until \"Next\" is pressed again.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/features/history/useGatedHistoryFlow.ts",
           "frontend/src/features/history/HistoryControls.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/features/prediction/useActorConnection.ts",
-          "frontend/src/features/prediction/usePrediction.ts",
+          "frontend/src/features/history/useGatedHistoryFlow.ts",
           "frontend/src/features/history/HistoryControls.tsx"
         ]
       },
       {
-        "id": "REQ-34",
-        "summary": "Improve frontend diagnostics and recovery for prediction failures so the user can always understand what went wrong (in English) and can successfully recover using a retry action once the backend becomes available.",
+        "id": "REQ-39",
+        "summary": "Update all UI counters, helper text, and any hard-coded references from 20 to 30 so the interface consistently reflects the new 30-entry maximum without changing styling, component structure, or interactions beyond the required numeric updates.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/features/prediction/usePrediction.ts",
-          "frontend/src/features/prediction/PredictionPanel.tsx",
-          "frontend/src/features/prediction/useActorConnection.ts"
+          "frontend/src/features/history/HistoryControls.tsx",
+          "frontend/src/features/results/ResultsPanel.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/features/prediction/usePrediction.ts",
-          "frontend/src/features/prediction/PredictionPanel.tsx",
-          "frontend/src/features/prediction/useActorConnection.ts"
+          "frontend/src/features/history/HistoryControls.tsx",
+          "frontend/src/features/results/ResultsPanel.tsx"
         ]
       },
       {
-        "id": "REQ-35",
-        "summary": "Harden the backend prediction endpoint so it never traps for valid inputs (history length 1–20, results of \"Big\"/\"Small\"), and always returns a valid prediction + explanation.",
+        "id": "REQ-40",
+        "summary": "Update the Results panel compact history visualization to render 30 entries in the same compact style, preserving the as-entered order and numbered labels, by extending the existing two-line layout to accommodate 30 items (e.g., three rows of 10) without changing the overall look-and-feel of the panel.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/features/results/ResultsPanel.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/features/results/ResultsPanel.tsx"
+        ]
+      },
+      {
+        "id": "REQ-41",
+        "summary": "Update the prediction request payload usage so predictions continue to work using the current in-memory history up to 30 items, and ensure no frontend logic assumes a 20-item maximum when generating or retrying predictions.",
+        "status": "missing",
+        "plannedFiles": [
+          "frontend/src/features/prediction/usePrediction.ts",
+          "frontend/src/hooks/useQueries.ts"
+        ],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-42",
+        "summary": "Update the backend history cap used by any remaining history storage utilities from 20 to 30 so internal limits do not conflict with the new 30-entry model, without re-introducing login requirements or changing the anonymous prediction flow.",
         "status": "unknown",
         "plannedFiles": [],
         "matchedFiles": []
       },
       {
-        "id": "REQ-36",
-        "summary": "Add a minimal automated frontend test/check that verifies prediction can be triggered from non-empty history and that the UI transitions from idle/connecting to displaying either a prediction or a recoverable error state with a working retry.",
-        "status": "implemented",
+        "id": "REQ-43",
+        "summary": "Update the existing automated frontend prediction flow check (the DOM-based script) so it remains valid after switching to a 30-entry maximum (no assertions/logic that assume a 20-entry limit).",
+        "status": "missing",
         "plannedFiles": [
-          "frontend/src/features/prediction/predictionFlow.check.ts",
-          "frontend/src/main.tsx",
-          "frontend/src/features/history/HistoryControls.tsx",
-          "frontend/src/features/prediction/PredictionPanel.tsx"
+          "frontend/src/features/prediction/predictionFlow.check.ts"
         ],
-        "matchedFiles": [
-          "frontend/src/features/prediction/predictionFlow.check.ts",
-          "frontend/src/features/history/HistoryControls.tsx",
-          "frontend/src/features/prediction/PredictionPanel.tsx"
-        ]
+        "matchedFiles": []
       }
     ]
   },
   "changedFiles": [
     "backend/main.mo",
+    "backend/migration.mo",
     "build-request.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
     "frontend/src/features/history/HistoryControls.tsx",
-    "frontend/src/features/prediction/PredictionPanel.tsx",
-    "frontend/src/features/prediction/predictionFlow.check.ts",
-    "frontend/src/features/prediction/useActorConnection.ts",
-    "frontend/src/features/prediction/usePrediction.ts",
+    "frontend/src/features/history/useGatedHistoryFlow.ts",
+    "frontend/src/features/history/useLocalHistory.ts",
+    "frontend/src/features/results/ResultsPanel.tsx",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

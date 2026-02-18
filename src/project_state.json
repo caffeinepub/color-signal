@@ -1,14 +1,16 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 21,
-  "summary": "Color trading signal app that generates a Big/Small prediction signal with a simplified UI (tap-to-add Big/Small) and no login/Internet Identity; history persistence is not required; support a separate \"Prediction\" button; update prediction logic to better detect patterns/trends (including manipulation) using up to the last 20 Big/Small results; update history UI to show entries in a compact two-line format; when history reaches 20, show a \"Next\" button that must be tapped to enable adding the next Big/Small, at which point the oldest entry is removed and the list shifts forward (rolling window).",
+  "projectStateVersion": 23,
+  "summary": "Color trading signal app that generates a Big/Small prediction signal with a simplified UI (tap-to-add Big/Small) and no login/Internet Identity; history persistence is not required; support a separate \"Prediction\" button; update prediction logic to better detect patterns/trends (including manipulation) using up to the last 30 Big/Small results; update history UI to show entries in a compact two-line format; when history reaches 30, show a \"Next\" button that must be tapped to enable adding the next Big/Small, at which point the oldest entry is removed and the list shifts forward (rolling window).",
   "architectural_notes": [
     "Remove Internet Identity authentication flow; app should function without sign-in.",
     "Do not persist user history in backend; any state (if present) should be non-authenticated/non-persistent per user requirement.",
     "Support a manual prediction trigger via a dedicated \"Prediction\" button (in addition to any auto-prediction behavior, unless later changed).",
     "Prediction should be based on the last 20 Big/Small results provided by the user (no other data source specified).",
     "Prediction logic should attempt automatic pattern/trend detection (including potential manipulation) rather than relying only on simple heuristics.",
-    "When history length reaches 20, require an explicit user tap on a \"Next\" button (shown only at full capacity) to unlock the next Big/Small input; upon adding the next entry, remove the oldest item and shift indices so the new entry becomes #20."
+    "When history length reaches 20, require an explicit user tap on a \"Next\" button (shown only at full capacity) to unlock the next Big/Small input; upon adding the next entry, remove the oldest item and shift indices so the new entry becomes #20.",
+    "Increase in-memory rolling history capacity from 20 to 30; update UI counters/limits and prediction analysis window to use last 30 results; keep all other behavior unchanged.",
+    "Update the gated input flow to trigger at 30/30 (show \"Next\" only when full; require tapping \"Next\" to unlock exactly one Big/Small entry; upon entry remove oldest and append new to maintain a 30-length rolling window)."
   ],
   "known_issues": [
     "User requires 99.99% prediction accuracy; may be unrealistic/not verifiable depending on data and problem randomness.",
@@ -20,7 +22,7 @@
     "\"Next\" button for the 20/20 gated flow has disappeared/not showing (user report: \"next button তো চলে গেছে\").",
     "Prediction is still not working for the user in the latest deployed build (user report: \"Prediction হচ্ছে না\")."
   ],
-  "isFixRequest": true,
+  "isFixRequest": false,
   "existing_features": [
     {
       "id": "feature-create-a-frontend-screen-that-lets-the-user-enter-and-manage-a-rolling-10-item-running-history-of-outcomes-with-only-two-allowed-values-big-and-small-provide-controls-to-add-the-next-result-remove-the-most-recent-result-clear-all-and-show-a-visible-count-0-10-to-10-10",
@@ -261,6 +263,38 @@
         "REQ-36"
       ],
       "version": 1
+    },
+    {
+      "id": "feature-increase-the-local-in-memory-rolling-history-capacity-from-20-entries-to-30-entries-while-preserving-the-existing-as-entered-chronological-order-and-all-current-behaviors-tap-to-add-prediction-triggering-and-ui-layout-style-unchanged-except-where-counts-limits-must-reflect-30",
+      "title": "Increase the local in-memory rolling history capacity from 20 entries to 30 entries, while preserving the existing as-entered chronological order and all current behaviors (tap-to-add, prediction triggering, and UI layout style) unchanged except where counts/limits must reflect 30.",
+      "reqIds": [
+        "REQ-37"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-gated-input-flow-to-operate-at-30-30-instead-of-20-20-show-the-next-button-whenever-historycount-is-30-when-historycount-is-30-and-the-gate-is-locked-disable-big-small-taps-pressing-next-unlocks-exactly-one-subsequent-big-small-tap-that-single-tap-appends-the-new-entry-while-keeping-history-length-at-30-oldest-entry-drops-off-and-then-the-gate-re-locks-until-next-is-pressed-again",
+      "title": "Update the gated input flow to operate at 30/30 instead of 20/20: show the \"Next\" button whenever historyCount is 30; when historyCount is 30 and the gate is locked, disable Big/Small taps; pressing \"Next\" unlocks exactly one subsequent Big/Small tap; that single tap appends the new entry while keeping history length at 30 (oldest entry drops off), and then the gate re-locks until \"Next\" is pressed again.",
+      "reqIds": [
+        "REQ-38"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-all-ui-counters-helper-text-and-any-hard-coded-references-from-20-to-30-so-the-interface-consistently-reflects-the-new-30-entry-maximum-without-changing-styling-component-structure-or-interactions-beyond-the-required-numeric-updates",
+      "title": "Update all UI counters, helper text, and any hard-coded references from 20 to 30 so the interface consistently reflects the new 30-entry maximum without changing styling, component structure, or interactions beyond the required numeric updates.",
+      "reqIds": [
+        "REQ-39"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-results-panel-compact-history-visualization-to-render-30-entries-in-the-same-compact-style-preserving-the-as-entered-order-and-numbered-labels-by-extending-the-existing-two-line-layout-to-accommodate-30-items-e-g-three-rows-of-10-without-changing-the-overall-look-and-feel-of-the-panel",
+      "title": "Update the Results panel compact history visualization to render 30 entries in the same compact style, preserving the as-entered order and numbered labels, by extending the existing two-line layout to accommodate 30 items (e.g., three rows of 10) without changing the overall look-and-feel of the panel.",
+      "reqIds": [
+        "REQ-40"
+      ],
+      "version": 1
     }
   ],
   "new_feature_requests": [
@@ -393,6 +427,36 @@
       "summary": "Harden the backend prediction endpoint so it never traps for valid inputs (history length 1–20, results of \"Big\"/\"Small\"), and always returns a valid prediction + explanation.",
       "reqIds": [
         "REQ-35"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-30",
+      "summary": "Increase rolling history length from 20 items to 30 items (and use last 30 Big/Small results for analysis/prediction) while keeping all other app behavior/UI unchanged.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-35",
+      "summary": "Update the prediction request payload usage so predictions continue to work using the current in-memory history up to 30 items, and ensure no frontend logic assumes a 20-item maximum when generating or retrying predictions.",
+      "reqIds": [
+        "REQ-41"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-36",
+      "summary": "Update the backend history cap used by any remaining history storage utilities from 20 to 30 so internal limits do not conflict with the new 30-entry model, without re-introducing login requirements or changing the anonymous prediction flow.",
+      "reqIds": [
+        "REQ-42"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-37",
+      "summary": "Update the existing automated frontend prediction flow check (the DOM-based script) so it remains valid after switching to a 30-entry maximum (no assertions/logic that assume a 20-entry limit).",
+      "reqIds": [
+        "REQ-43"
       ],
       "status": "pending"
     }
