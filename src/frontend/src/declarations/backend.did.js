@@ -8,16 +8,16 @@
 
 import { IDL } from '@icp-sdk/core/candid';
 
+export const HistoryItem = IDL.Record({
+  'result' : IDL.Text,
+  'timestamp' : IDL.Int,
+});
 export const UserRole = IDL.Variant({
   'admin' : IDL.Null,
   'user' : IDL.Null,
   'guest' : IDL.Null,
 });
 export const UserProfile = IDL.Record({ 'name' : IDL.Text });
-export const HistoryItem = IDL.Record({
-  'result' : IDL.Text,
-  'timestamp' : IDL.Int,
-});
 export const BigSmallPrediction = IDL.Record({
   'prediction' : IDL.Text,
   'explanation' : IDL.Text,
@@ -25,14 +25,14 @@ export const BigSmallPrediction = IDL.Record({
 
 export const idlService = IDL.Service({
   '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
+  'analyzeBias' : IDL.Func([IDL.Vec(HistoryItem)], [IDL.Nat, IDL.Nat], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
   'getHistory' : IDL.Func([], [IDL.Vec(HistoryItem)], ['query']),
-  'getPredictionBias' : IDL.Func([IDL.Vec(HistoryItem)], [IDL.Int], ['query']),
-  'getTimeWindowStats' : IDL.Func(
-      [IDL.Vec(HistoryItem), IDL.Int, IDL.Text],
-      [IDL.Int],
+  'getPrediction' : IDL.Func(
+      [IDL.Vec(HistoryItem)],
+      [BigSmallPrediction],
       ['query'],
     ),
   'getUserProfile' : IDL.Func(
@@ -40,29 +40,37 @@ export const idlService = IDL.Service({
       [IDL.Opt(UserProfile)],
       ['query'],
     ),
-  'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
-  'predictNext' : IDL.Func(
+  'historicalPatternAnalysis' : IDL.Func(
       [IDL.Vec(HistoryItem)],
-      [BigSmallPrediction],
-      ['query'],
+      [IDL.Vec(IDL.Vec(IDL.Text))],
+      [],
     ),
+  'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
   'saveHistoryEntry' : IDL.Func([HistoryItem], [], []),
+  'switchTrendAnalysis' : IDL.Func(
+      [IDL.Vec(HistoryItem)],
+      [IDL.Bool, IDL.Nat],
+      ['query'],
+    ),
+  'updatePredictionFeedback' : IDL.Func([IDL.Vec(IDL.Bool)], [], []),
+  'updateTimeWindow' : IDL.Func([IDL.Int], [], []),
+  'uploadHistoricalPatterns' : IDL.Func([IDL.Vec(IDL.Vec(IDL.Text))], [], []),
 });
 
 export const idlInitArgs = [];
 
 export const idlFactory = ({ IDL }) => {
+  const HistoryItem = IDL.Record({
+    'result' : IDL.Text,
+    'timestamp' : IDL.Int,
+  });
   const UserRole = IDL.Variant({
     'admin' : IDL.Null,
     'user' : IDL.Null,
     'guest' : IDL.Null,
   });
   const UserProfile = IDL.Record({ 'name' : IDL.Text });
-  const HistoryItem = IDL.Record({
-    'result' : IDL.Text,
-    'timestamp' : IDL.Int,
-  });
   const BigSmallPrediction = IDL.Record({
     'prediction' : IDL.Text,
     'explanation' : IDL.Text,
@@ -70,18 +78,14 @@ export const idlFactory = ({ IDL }) => {
   
   return IDL.Service({
     '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
+    'analyzeBias' : IDL.Func([IDL.Vec(HistoryItem)], [IDL.Nat, IDL.Nat], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
     'getHistory' : IDL.Func([], [IDL.Vec(HistoryItem)], ['query']),
-    'getPredictionBias' : IDL.Func(
+    'getPrediction' : IDL.Func(
         [IDL.Vec(HistoryItem)],
-        [IDL.Int],
-        ['query'],
-      ),
-    'getTimeWindowStats' : IDL.Func(
-        [IDL.Vec(HistoryItem), IDL.Int, IDL.Text],
-        [IDL.Int],
+        [BigSmallPrediction],
         ['query'],
       ),
     'getUserProfile' : IDL.Func(
@@ -89,14 +93,22 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Opt(UserProfile)],
         ['query'],
       ),
-    'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
-    'predictNext' : IDL.Func(
+    'historicalPatternAnalysis' : IDL.Func(
         [IDL.Vec(HistoryItem)],
-        [BigSmallPrediction],
-        ['query'],
+        [IDL.Vec(IDL.Vec(IDL.Text))],
+        [],
       ),
+    'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
     'saveHistoryEntry' : IDL.Func([HistoryItem], [], []),
+    'switchTrendAnalysis' : IDL.Func(
+        [IDL.Vec(HistoryItem)],
+        [IDL.Bool, IDL.Nat],
+        ['query'],
+      ),
+    'updatePredictionFeedback' : IDL.Func([IDL.Vec(IDL.Bool)], [], []),
+    'updateTimeWindow' : IDL.Func([IDL.Int], [], []),
+    'uploadHistoricalPatterns' : IDL.Func([IDL.Vec(IDL.Vec(IDL.Text))], [], []),
   });
 };
 

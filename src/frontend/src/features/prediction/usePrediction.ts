@@ -1,5 +1,5 @@
 import { useCallback, useState, useEffect } from 'react';
-import { usePredictNext } from '../../hooks/useQueries';
+import { usePredictNext, useUpdatePredictionFeedback } from '../../hooks/useQueries';
 import { useActor } from '../../hooks/useActor';
 import type { HistoryItem } from '../../backend';
 
@@ -8,9 +8,10 @@ export interface PredictionError {
   message: string;
 }
 
-export function usePrediction(history: HistoryItem[]) {
+export function usePrediction(history: HistoryItem[], feedbackArray?: boolean[]) {
   const { actor, isFetching: actorFetching } = useActor();
   const { mutateAsync: predictNext, isPending } = usePredictNext();
+  const { mutateAsync: updateFeedback } = useUpdatePredictionFeedback();
   const [prediction, setPrediction] = useState<string>('');
   const [explanation, setExplanation] = useState<string>('');
   const [lastGeneratedAt, setLastGeneratedAt] = useState<Date | null>(null);
@@ -73,6 +74,12 @@ export function usePrediction(history: HistoryItem[]) {
 
     try {
       setError(null);
+      
+      // Send feedback before generating prediction if available
+      if (feedbackArray && feedbackArray.length > 0) {
+        await updateFeedback(feedbackArray);
+      }
+      
       const result = await predictNext(history);
       setPrediction(result.prediction);
       setExplanation(result.explanation);
@@ -82,7 +89,7 @@ export function usePrediction(history: HistoryItem[]) {
       const categorizedError = categorizeError(err);
       setError(categorizedError);
     }
-  }, [history, predictNext, isActorReady]);
+  }, [history, predictNext, updateFeedback, feedbackArray, isActorReady]);
 
   // Dedicated retry function that always uses current in-memory history
   const retryPrediction = useCallback(async () => {
@@ -100,6 +107,12 @@ export function usePrediction(history: HistoryItem[]) {
 
     try {
       setError(null);
+      
+      // Send feedback before retrying prediction if available
+      if (feedbackArray && feedbackArray.length > 0) {
+        await updateFeedback(feedbackArray);
+      }
+      
       const result = await predictNext(history);
       setPrediction(result.prediction);
       setExplanation(result.explanation);
@@ -109,7 +122,7 @@ export function usePrediction(history: HistoryItem[]) {
       const categorizedError = categorizeError(err);
       setError(categorizedError);
     }
-  }, [history, predictNext, isActorReady]);
+  }, [history, predictNext, updateFeedback, feedbackArray, isActorReady]);
 
   return {
     prediction,

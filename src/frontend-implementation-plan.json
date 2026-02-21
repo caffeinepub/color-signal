@@ -1,115 +1,94 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Color Signal: Increase rolling history capacity from 20 to 30 (frontend-only)",
+  "title": "Add Win/Loss feedback buttons and improve pattern-based prediction logic",
   "requirements": [
     {
-      "id": "REQ-37",
-      "summary": "Increase local in-memory rolling history capacity to 30 entries while preserving chronological order and existing behaviors.",
+      "id": "REQ-48",
+      "summary": "Add Win and Loss feedback buttons in the UI after a prediction is generated",
       "acceptanceCriteria": [
-        "The app allows adding history entries until the visible counter reaches 30/30.",
-        "When more than 30 entries would be added, history remains a rolling window capped at 30 entries (no crashes, no duplicate lists).",
-        "The history order remains the same as currently displayed/used (as-entered sequence), with numbering continuing to reflect the current order logic (do not reverse)."
+        "Win and Loss buttons are visible after a prediction is displayed",
+        "Buttons are labeled 'Win' and 'Loss' in English",
+        "Tapping Win or Loss records the feedback for that prediction"
       ],
       "file_operations": [
         {
-          "path": "frontend/src/features/history/useLocalHistory.ts",
+          "path": "frontend/src/features/prediction/PredictionPanel.tsx",
           "operation": "modify",
-          "description": "Update the local rolling window cap constant from 20 to 30 and ensure the existing append-then-slice logic continues to preserve as-entered chronological order while dropping only the oldest entries when exceeding the cap."
+          "description": "Add Win and Loss buttons below the prediction explanation that become visible when a prediction exists. Wire buttons to call a feedback handler callback passed from parent component. Disable buttons after feedback is recorded for the current prediction."
+        },
+        {
+          "path": "frontend/src/App.tsx",
+          "operation": "modify",
+          "description": "Add state to track feedback for current prediction. Pass feedback handler callback to PredictionPanel that records win/loss for the current prediction and stores it in local feedback history state."
         }
       ]
     },
     {
-      "id": "REQ-38",
-      "summary": "Update the gated input flow to operate at 30/30 with Next unlocking exactly one subsequent Big/Small tap at full history.",
+      "id": "REQ-49",
+      "summary": "Store win/loss feedback in local state alongside prediction history",
       "acceptanceCriteria": [
-        "The \"Next\" button is visible when (and only when) historyCount is exactly 30.",
-        "At 30/30 and locked, Big/Small buttons are disabled; after pressing \"Next\", exactly one Big/Small tap is accepted; immediately after that tap, Big/Small becomes disabled again until \"Next\" is pressed again.",
-        "After the single allowed tap at full history, the history still shows 30 items and reflects a correct rolling window (one oldest entry removed, one new entry appended).",
-        "All user-facing text introduced/updated for the gating flow remains in English (e.g., \"Next\", helper text)."
+        "Each prediction can be associated with a win or loss outcome",
+        "Feedback is stored locally (in-memory) for use in future predictions",
+        "Feedback persists as long as the session is active"
       ],
       "file_operations": [
         {
-          "path": "frontend/src/features/history/useGatedHistoryFlow.ts",
+          "path": "frontend/src/features/prediction/usePredictionFeedback.ts",
+          "operation": "create",
+          "description": "Create a custom hook that manages an array of feedback objects linking prediction timestamps to win/loss boolean values. Provide methods to add feedback, retrieve feedback array, and clear feedback. Store feedback in React state for session persistence."
+        },
+        {
+          "path": "frontend/src/App.tsx",
           "operation": "modify",
-          "description": "Change the gated-flow full-history threshold from 20 to 30, keeping the existing token-based one-tap unlock behavior and the reset behavior when history drops below the threshold."
+          "description": "Import and use the usePredictionFeedback hook to manage feedback state. Wire feedback data to be included when requesting predictions from the backend."
+        }
+      ]
+    },
+    {
+      "id": "REQ-52",
+      "summary": "Add UI feature for uploading or inputting historical pattern data",
+      "acceptanceCriteria": [
+        "UI provides an input mechanism for uploading or entering historical Big/Small pattern sequences",
+        "User can submit old pattern history to supplement the current 20-item rolling history",
+        "Uploaded pattern data is sent to the backend for analysis"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/features/history/HistoryUploadDialog.tsx",
+          "operation": "create",
+          "description": "Create a dialog component with a textarea for entering comma-separated or line-separated Big/Small pattern sequences. Include validation to ensure only Big or Small values are accepted. Add a submit button that parses the input into an array of pattern sequences and calls a backend upload handler. Use shadcn/ui Dialog component for the modal."
         },
         {
           "path": "frontend/src/features/history/HistoryControls.tsx",
           "operation": "modify",
-          "description": "Update full-history checks and Next button visibility conditions from 20 to 30, preserving all existing button styles, interactions, and English helper text."
-        }
-      ]
-    },
-    {
-      "id": "REQ-39",
-      "summary": "Update all UI counters, helper text, and hard-coded references to reflect a 30-entry maximum without altering styling or structure.",
-      "acceptanceCriteria": [
-        "The Add Results badge shows X/30 (not X/20).",
-        "The Results history label shows History (X/30).",
-        "Any helper text that refers to being full reflects 30/30."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/features/history/HistoryControls.tsx",
-          "operation": "modify",
-          "description": "Update the Add Results counter display from /20 to /30 and ensure any related full-history gating text remains English and unchanged except for numeric implications."
+          "description": "Add an 'Upload History' button that opens the HistoryUploadDialog. Position it near the Clear All button in the controls section."
         },
         {
-          "path": "frontend/src/features/results/ResultsPanel.tsx",
+          "path": "frontend/src/hooks/useQueries.ts",
           "operation": "modify",
-          "description": "Update the History label counter from (X/20) to (X/30), without changing styling, typography, or panel structure beyond numeric updates."
+          "description": "Add a useMutation hook for uploadHistoricalPatterns that calls actor.uploadHistoricalPatterns with the parsed pattern array. Include success/error toast notifications."
         }
       ]
     },
     {
-      "id": "REQ-40",
-      "summary": "Extend the Results panel compact history visualization to render all 30 entries in the same compact style and as-entered order.",
+      "id": "REQ-54",
+      "summary": "Pass win/loss feedback data to backend when generating predictions",
       "acceptanceCriteria": [
-        "With 1–30 entries, the Results panel shows all entries with correct numbering and the same color styling rules (Big=yellow, Small=blue).",
-        "With 30 entries, all 30 are visible in the compact layout (no truncation) and the order matches the in-memory history sequence used for prediction.",
-        "The panel continues to render correctly on typical mobile viewport widths (no overlapping text that makes entries unreadable)."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/features/results/ResultsPanel.tsx",
-          "operation": "modify",
-          "description": "Adjust the compact history rendering from a two-row (1–10, 11–20) layout to include a third row (21–30) (or equivalent extension) while preserving the current flex-wrap compact look, numbering, and color styling rules."
-        }
-      ]
-    },
-    {
-      "id": "REQ-41",
-      "summary": "Ensure prediction requests and retry behavior use the current in-memory history up to 30 items with no 20-item assumptions.",
-      "acceptanceCriteria": [
-        "Predictions can be generated successfully when history length is 1, 20, and 30.",
-        "Retry behavior continues to work and uses the current in-memory history (up to 30) without errors."
+        "Frontend collects win/loss feedback for recent predictions",
+        "Feedback data is included in the prediction request payload",
+        "Backend receives and processes the feedback data"
       ],
       "file_operations": [
         {
           "path": "frontend/src/features/prediction/usePrediction.ts",
           "operation": "modify",
-          "description": "Audit and adjust any frontend prediction-generation logic to ensure it does not assume a 20-item maximum and continues to pass the current in-memory history through generate and retry flows (up to 30)."
+          "description": "Update the mutation to accept an optional feedback array parameter. When calling actor.getPrediction, first call actor.updatePredictionFeedback with the feedback array if feedback exists, then proceed with the prediction request."
         },
         {
-          "path": "frontend/src/hooks/useQueries.ts",
+          "path": "frontend/src/App.tsx",
           "operation": "modify",
-          "description": "Confirm the prediction mutation continues to accept and forward the provided HistoryItem[] as-is (up to 30) and remove/avoid any implicit 20-item capping assumptions in frontend query/mutation logic."
-        }
-      ]
-    },
-    {
-      "id": "REQ-43",
-      "summary": "Update the DOM-based automated prediction flow check to remain valid with a 30-entry maximum.",
-      "acceptanceCriteria": [
-        "Running the check via ?checkPrediction=1 still produces a PASS when backend is available.",
-        "The check does not fail due to any hard-coded 20-entry assumptions."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/features/prediction/predictionFlow.check.ts",
-          "operation": "modify",
-          "description": "Update the DOM-based check logic to avoid any assumptions tied to a 20-entry maximum (including any future-proofing around full-history gating/Next visibility) while keeping the existing PASS/FAIL reporting behavior unchanged."
+          "description": "Pass the feedback array from usePredictionFeedback hook to the prediction mutation when triggering new predictions. Ensure feedback is synchronized before each prediction call."
         }
       ]
     }

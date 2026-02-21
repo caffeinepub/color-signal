@@ -1,7 +1,7 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-18T08:21:18.482Z",
+  "generatedAt": "2026-02-21T05:28:52.922Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
@@ -11,92 +11,100 @@
     "implemented": 4,
     "items": [
       {
-        "id": "REQ-37",
-        "summary": "Increase the local in-memory rolling history capacity from 20 entries to 30 entries, while preserving the existing as-entered chronological order and all current behaviors (tap-to-add, prediction triggering, and UI layout style) unchanged except where counts/limits must reflect 30.",
+        "id": "REQ-48",
+        "summary": "Add two new buttons labeled 'Win' and 'Loss' in the UI that appear after a prediction is generated, allowing the user to report whether the prediction was correct (Win) or incorrect (Loss).",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/features/history/useLocalHistory.ts"
+          "frontend/src/features/prediction/PredictionPanel.tsx",
+          "frontend/src/App.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/features/history/useLocalHistory.ts"
+          "frontend/src/features/prediction/PredictionPanel.tsx",
+          "frontend/src/App.tsx"
         ]
       },
       {
-        "id": "REQ-38",
-        "summary": "Update the gated input flow to operate at 30/30 instead of 20/20: show the \"Next\" button whenever historyCount is 30; when historyCount is 30 and the gate is locked, disable Big/Small taps; pressing \"Next\" unlocks exactly one subsequent Big/Small tap; that single tap appends the new entry while keeping history length at 30 (oldest entry drops off), and then the gate re-locks until \"Next\" is pressed again.",
+        "id": "REQ-49",
+        "summary": "Store win/loss feedback in local state alongside the prediction history so the app can track which predictions were correct and which were incorrect.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/features/history/useGatedHistoryFlow.ts",
-          "frontend/src/features/history/HistoryControls.tsx"
+          "frontend/src/features/prediction/usePredictionFeedback.ts",
+          "frontend/src/App.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/features/history/useGatedHistoryFlow.ts",
-          "frontend/src/features/history/HistoryControls.tsx"
+          "frontend/src/features/prediction/usePredictionFeedback.ts",
+          "frontend/src/App.tsx"
         ]
       },
       {
-        "id": "REQ-39",
-        "summary": "Update all UI counters, helper text, and any hard-coded references from 20 to 30 so the interface consistently reflects the new 30-entry maximum without changing styling, component structure, or interactions beyond the required numeric updates.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/features/history/HistoryControls.tsx",
-          "frontend/src/features/results/ResultsPanel.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/features/history/HistoryControls.tsx",
-          "frontend/src/features/results/ResultsPanel.tsx"
-        ]
-      },
-      {
-        "id": "REQ-40",
-        "summary": "Update the Results panel compact history visualization to render 30 entries in the same compact style, preserving the as-entered order and numbered labels, by extending the existing two-line layout to accommodate 30 items (e.g., three rows of 10) without changing the overall look-and-feel of the panel.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/features/results/ResultsPanel.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/features/results/ResultsPanel.tsx"
-        ]
-      },
-      {
-        "id": "REQ-41",
-        "summary": "Update the prediction request payload usage so predictions continue to work using the current in-memory history up to 30 items, and ensure no frontend logic assumes a 20-item maximum when generating or retrying predictions.",
-        "status": "missing",
-        "plannedFiles": [
-          "frontend/src/features/prediction/usePrediction.ts",
-          "frontend/src/hooks/useQueries.ts"
-        ],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-42",
-        "summary": "Update the backend history cap used by any remaining history storage utilities from 20 to 30 so internal limits do not conflict with the new 30-entry model, without re-introducing login requirements or changing the anonymous prediction flow.",
+        "id": "REQ-50",
+        "summary": "Update the backend prediction algorithm to accept an array of win/loss feedback (corresponding to recent predictions) and incorporate this feedback into the prediction logic to learn from past accuracy and adjust future predictions accordingly.",
         "status": "unknown",
         "plannedFiles": [],
         "matchedFiles": []
       },
       {
-        "id": "REQ-43",
-        "summary": "Update the existing automated frontend prediction flow check (the DOM-based script) so it remains valid after switching to a 30-entry maximum (no assertions/logic that assume a 20-entry limit).",
-        "status": "missing",
-        "plannedFiles": [
-          "frontend/src/features/prediction/predictionFlow.check.ts"
-        ],
+        "id": "REQ-51",
+        "summary": "Improve the backend prediction algorithm to better analyze the 20-item Big/Small history for patterns, trends, streaks, reversals, and alternation, reducing the tendency to predict Big excessively and minimizing consecutive loss streaks (reported up to 8 losses in a row).",
+        "status": "unknown",
+        "plannedFiles": [],
         "matchedFiles": []
+      },
+      {
+        "id": "REQ-52",
+        "summary": "Add a UI feature that allows the user to upload or input historical pattern data from old market results so the app can learn from past patterns and improve prediction accuracy for new patterns.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/features/history/HistoryUploadDialog.tsx",
+          "frontend/src/features/history/HistoryControls.tsx",
+          "frontend/src/hooks/useQueries.ts"
+        ],
+        "matchedFiles": [
+          "frontend/src/features/history/HistoryUploadDialog.tsx",
+          "frontend/src/features/history/HistoryControls.tsx",
+          "frontend/src/hooks/useQueries.ts"
+        ]
+      },
+      {
+        "id": "REQ-53",
+        "summary": "Update the backend to accept and store uploaded historical pattern data from the user, and incorporate this data into the prediction algorithm to improve pattern recognition and prediction accuracy over time.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-54",
+        "summary": "Update the frontend to pass win/loss feedback data to the backend when generating a new prediction, so the backend can use this feedback to refine its prediction strategy.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/features/prediction/usePrediction.ts",
+          "frontend/src/App.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/features/prediction/usePrediction.ts",
+          "frontend/src/App.tsx"
+        ]
       }
     ]
   },
   "changedFiles": [
     "backend/main.mo",
-    "backend/migration.mo",
     "build-request.json",
+    "caffeine.lock.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
+    "frontend/src/App.tsx",
+    "frontend/src/backend.d.ts",
+    "frontend/src/backend.ts",
+    "frontend/src/declarations/backend.did.d.ts",
+    "frontend/src/declarations/backend.did.js",
     "frontend/src/features/history/HistoryControls.tsx",
-    "frontend/src/features/history/useGatedHistoryFlow.ts",
-    "frontend/src/features/history/useLocalHistory.ts",
-    "frontend/src/features/results/ResultsPanel.tsx",
+    "frontend/src/features/history/HistoryUploadDialog.tsx",
+    "frontend/src/features/prediction/PredictionPanel.tsx",
+    "frontend/src/features/prediction/usePrediction.ts",
+    "frontend/src/features/prediction/usePredictionFeedback.ts",
+    "frontend/src/hooks/useQueries.ts",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

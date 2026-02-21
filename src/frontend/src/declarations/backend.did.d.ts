@@ -21,20 +21,24 @@ export type UserRole = { 'admin' : null } |
   { 'guest' : null };
 export interface _SERVICE {
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
+  'analyzeBias' : ActorMethod<[Array<HistoryItem>], [bigint, bigint]>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
   'getHistory' : ActorMethod<[], Array<HistoryItem>>,
-  'getPredictionBias' : ActorMethod<[Array<HistoryItem>], bigint>,
-  'getTimeWindowStats' : ActorMethod<
-    [Array<HistoryItem>, bigint, string],
-    bigint
-  >,
+  'getPrediction' : ActorMethod<[Array<HistoryItem>], BigSmallPrediction>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
+  'historicalPatternAnalysis' : ActorMethod<
+    [Array<HistoryItem>],
+    Array<Array<string>>
+  >,
   'isCallerAdmin' : ActorMethod<[], boolean>,
-  'predictNext' : ActorMethod<[Array<HistoryItem>], BigSmallPrediction>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
   'saveHistoryEntry' : ActorMethod<[HistoryItem], undefined>,
+  'switchTrendAnalysis' : ActorMethod<[Array<HistoryItem>], [boolean, bigint]>,
+  'updatePredictionFeedback' : ActorMethod<[Array<boolean>], undefined>,
+  'updateTimeWindow' : ActorMethod<[bigint], undefined>,
+  'uploadHistoricalPatterns' : ActorMethod<[Array<Array<string>>], undefined>,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];

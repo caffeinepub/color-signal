@@ -107,17 +107,21 @@ export enum UserRole {
 }
 export interface backendInterface {
     _initializeAccessControlWithSecret(userSecret: string): Promise<void>;
+    analyzeBias(history: Array<HistoryItem>): Promise<[bigint, bigint]>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
     getHistory(): Promise<Array<HistoryItem>>;
-    getPredictionBias(history: Array<HistoryItem>): Promise<bigint>;
-    getTimeWindowStats(history: Array<HistoryItem>, window: bigint, target: string): Promise<bigint>;
+    getPrediction(history: Array<HistoryItem>): Promise<BigSmallPrediction>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
+    historicalPatternAnalysis(history: Array<HistoryItem>): Promise<Array<Array<string>>>;
     isCallerAdmin(): Promise<boolean>;
-    predictNext(history: Array<HistoryItem>): Promise<BigSmallPrediction>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     saveHistoryEntry(newEntry: HistoryItem): Promise<void>;
+    switchTrendAnalysis(history: Array<HistoryItem>): Promise<[boolean, bigint]>;
+    updatePredictionFeedback(feedback: Array<boolean>): Promise<void>;
+    updateTimeWindow(timeWindow: bigint): Promise<void>;
+    uploadHistoricalPatterns(patterns: Array<Array<string>>): Promise<void>;
 }
 import type { UserProfile as _UserProfile, UserRole as _UserRole } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
@@ -134,6 +138,26 @@ export class Backend implements backendInterface {
         } else {
             const result = await this.actor._initializeAccessControlWithSecret(arg0);
             return result;
+        }
+    }
+    async analyzeBias(arg0: Array<HistoryItem>): Promise<[bigint, bigint]> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.analyzeBias(arg0);
+                return [
+                    result[0],
+                    result[1]
+                ];
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.analyzeBias(arg0);
+            return [
+                result[0],
+                result[1]
+            ];
         }
     }
     async assignCallerUserRole(arg0: Principal, arg1: UserRole): Promise<void> {
@@ -192,31 +216,17 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async getPredictionBias(arg0: Array<HistoryItem>): Promise<bigint> {
+    async getPrediction(arg0: Array<HistoryItem>): Promise<BigSmallPrediction> {
         if (this.processError) {
             try {
-                const result = await this.actor.getPredictionBias(arg0);
+                const result = await this.actor.getPrediction(arg0);
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.getPredictionBias(arg0);
-            return result;
-        }
-    }
-    async getTimeWindowStats(arg0: Array<HistoryItem>, arg1: bigint, arg2: string): Promise<bigint> {
-        if (this.processError) {
-            try {
-                const result = await this.actor.getTimeWindowStats(arg0, arg1, arg2);
-                return result;
-            } catch (e) {
-                this.processError(e);
-                throw new Error("unreachable");
-            }
-        } else {
-            const result = await this.actor.getTimeWindowStats(arg0, arg1, arg2);
+            const result = await this.actor.getPrediction(arg0);
             return result;
         }
     }
@@ -234,6 +244,20 @@ export class Backend implements backendInterface {
             return from_candid_opt_n3(this._uploadFile, this._downloadFile, result);
         }
     }
+    async historicalPatternAnalysis(arg0: Array<HistoryItem>): Promise<Array<Array<string>>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.historicalPatternAnalysis(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.historicalPatternAnalysis(arg0);
+            return result;
+        }
+    }
     async isCallerAdmin(): Promise<boolean> {
         if (this.processError) {
             try {
@@ -245,20 +269,6 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.isCallerAdmin();
-            return result;
-        }
-    }
-    async predictNext(arg0: Array<HistoryItem>): Promise<BigSmallPrediction> {
-        if (this.processError) {
-            try {
-                const result = await this.actor.predictNext(arg0);
-                return result;
-            } catch (e) {
-                this.processError(e);
-                throw new Error("unreachable");
-            }
-        } else {
-            const result = await this.actor.predictNext(arg0);
             return result;
         }
     }
@@ -287,6 +297,68 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.saveHistoryEntry(arg0);
+            return result;
+        }
+    }
+    async switchTrendAnalysis(arg0: Array<HistoryItem>): Promise<[boolean, bigint]> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.switchTrendAnalysis(arg0);
+                return [
+                    result[0],
+                    result[1]
+                ];
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.switchTrendAnalysis(arg0);
+            return [
+                result[0],
+                result[1]
+            ];
+        }
+    }
+    async updatePredictionFeedback(arg0: Array<boolean>): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.updatePredictionFeedback(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.updatePredictionFeedback(arg0);
+            return result;
+        }
+    }
+    async updateTimeWindow(arg0: bigint): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.updateTimeWindow(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.updateTimeWindow(arg0);
+            return result;
+        }
+    }
+    async uploadHistoricalPatterns(arg0: Array<Array<string>>): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.uploadHistoricalPatterns(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.uploadHistoricalPatterns(arg0);
             return result;
         }
     }

@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 23,
-  "summary": "Color trading signal app that generates a Big/Small prediction signal with a simplified UI (tap-to-add Big/Small) and no login/Internet Identity; history persistence is not required; support a separate \"Prediction\" button; update prediction logic to better detect patterns/trends (including manipulation) using up to the last 30 Big/Small results; update history UI to show entries in a compact two-line format; when history reaches 30, show a \"Next\" button that must be tapped to enable adding the next Big/Small, at which point the oldest entry is removed and the list shifts forward (rolling window).",
+  "projectStateVersion": 27,
+  "summary": "Color trading signal app that generates a Big/Small prediction signal with a simplified UI (tap-to-add Big/Small) and no login/Internet Identity; history persistence is not required; support a separate \"Prediction\" button; update prediction logic to better detect patterns/trends (including manipulation) using up to the last 20 Big/Small results; update history UI to show entries in a compact two-line format; when history reaches 20, show a \"Next\" button that must be tapped to enable adding the next Big/Small, at which point the oldest entry is removed and the list shifts forward (rolling window).",
   "architectural_notes": [
     "Remove Internet Identity authentication flow; app should function without sign-in.",
     "Do not persist user history in backend; any state (if present) should be non-authenticated/non-persistent per user requirement.",
@@ -9,8 +9,9 @@
     "Prediction should be based on the last 20 Big/Small results provided by the user (no other data source specified).",
     "Prediction logic should attempt automatic pattern/trend detection (including potential manipulation) rather than relying only on simple heuristics.",
     "When history length reaches 20, require an explicit user tap on a \"Next\" button (shown only at full capacity) to unlock the next Big/Small input; upon adding the next entry, remove the oldest item and shift indices so the new entry becomes #20.",
-    "Increase in-memory rolling history capacity from 20 to 30; update UI counters/limits and prediction analysis window to use last 30 results; keep all other behavior unchanged.",
-    "Update the gated input flow to trigger at 30/30 (show \"Next\" only when full; require tapping \"Next\" to unlock exactly one Big/Small entry; upon entry remove oldest and append new to maintain a 30-length rolling window)."
+    "Revert in-memory rolling history capacity to 20; prediction analysis window uses last 20 results; gated \"Next\" flow triggers at 20/20.",
+    "Support user feedback (win/loss) for each prediction to improve future prediction accuracy; store or use feedback as part of prediction logic.",
+    "Allow the user to upload historical pattern data (old market patterns) as input for prediction analysis."
   ],
   "known_issues": [
     "User requires 99.99% prediction accuracy; may be unrealistic/not verifiable depending on data and problem randomness.",
@@ -20,9 +21,11 @@
     "App is not opening/loading for the user (reported: \"app open হচ্ছে না\").",
     "Prediction button still shows \"failed\" even after user enters a full 20-item Big/Small history (other buttons working).",
     "\"Next\" button for the 20/20 gated flow has disappeared/not showing (user report: \"next button তো চলে গেছে\").",
-    "Prediction is still not working for the user in the latest deployed build (user report: \"Prediction হচ্ছে না\")."
+    "Prediction is still not working for the user in the latest deployed build (user report: \"Prediction হচ্ছে না\").",
+    "Prediction accuracy is poor; the app gives consecutive losses (up to 8 in a row) and frequently predicts Big without understanding context.",
+    "User reports that the app does not analyze or understand patterns properly (\"কোনো কিছু বুঝে app signal দেয় না\")."
   ],
-  "isFixRequest": false,
+  "isFixRequest": true,
   "existing_features": [
     {
       "id": "feature-create-a-frontend-screen-that-lets-the-user-enter-and-manage-a-rolling-10-item-running-history-of-outcomes-with-only-two-allowed-values-big-and-small-provide-controls-to-add-the-next-result-remove-the-most-recent-result-clear-all-and-show-a-visible-count-0-10-to-10-10",
@@ -295,6 +298,78 @@
         "REQ-40"
       ],
       "version": 1
+    },
+    {
+      "id": "feature-revert-the-local-in-memory-rolling-history-capacity-from-30-entries-back-to-20-entries-preserving-the-existing-as-entered-chronological-order-and-the-current-rolling-window-behavior-drop-oldest-when-adding-beyond-the-cap",
+      "title": "Revert the local in-memory rolling history capacity from 30 entries back to 20 entries, preserving the existing as-entered chronological order and the current rolling-window behavior (drop oldest when adding beyond the cap).",
+      "reqIds": [
+        "REQ-41"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-gated-input-flow-to-operate-at-20-20-instead-of-30-30-show-the-next-button-whenever-historycount-is-20-when-historycount-is-20-and-the-gate-is-locked-disable-big-small-taps-pressing-next-unlocks-exactly-one-subsequent-big-small-tap-that-single-tap-appends-the-new-entry-while-keeping-history-length-at-20-oldest-entry-drops-off-and-then-the-gate-re-locks-until-next-is-pressed-again",
+      "title": "Update the gated input flow to operate at 20/20 instead of 30/30: show the \"Next\" button whenever historyCount is 20; when historyCount is 20 and the gate is locked, disable Big/Small taps; pressing \"Next\" unlocks exactly one subsequent Big/Small tap; that single tap appends the new entry while keeping history length at 20 (oldest entry drops off), and then the gate re-locks until \"Next\" is pressed again.",
+      "reqIds": [
+        "REQ-42"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-all-user-facing-ui-text-counters-helper-text-and-any-hard-coded-references-so-the-interface-consistently-reflects-a-20-entry-maximum-replace-30-with-20-wherever-it-is-used-for-limits-labels-help-text-use-english-for-all-user-facing-text",
+      "title": "Update all user-facing UI text, counters, helper text, and any hard-coded references so the interface consistently reflects a 20-entry maximum (replace 30 with 20 wherever it is used for limits/labels/help text). Use English for all user-facing text.",
+      "reqIds": [
+        "REQ-43"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-results-panel-compact-history-visualization-to-render-up-to-20-entries-in-the-same-compact-style-preserving-the-as-entered-order-and-numbered-labels-by-using-a-two-row-layout-items-1-10-and-11-20",
+      "title": "Update the Results panel compact history visualization to render up to 20 entries in the same compact style, preserving the as-entered order and numbered labels, by using a two-row layout (items 1–10 and 11–20).",
+      "reqIds": [
+        "REQ-44"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-automated-frontend-checks-tests-that-assume-a-30-entry-maximum-so-they-align-with-the-reverted-20-entry-model-and-the-20-20-gated-flow-including-visibility-of-the-next-button-at-20-20-and-gate-re-lock-behavior-after-one-unlocked-add",
+      "title": "Update automated frontend checks/tests that assume a 30-entry maximum so they align with the reverted 20-entry model and the 20/20 gated flow (including visibility of the Next button at 20/20 and gate re-lock behavior after one unlocked add).",
+      "reqIds": [
+        "REQ-45"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-two-new-buttons-labeled-win-and-loss-in-the-ui-that-appear-after-a-prediction-is-generated-allowing-the-user-to-report-whether-the-prediction-was-correct-win-or-incorrect-loss",
+      "title": "Add two new buttons labeled 'Win' and 'Loss' in the UI that appear after a prediction is generated, allowing the user to report whether the prediction was correct (Win) or incorrect (Loss).",
+      "reqIds": [
+        "REQ-48"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-store-win-loss-feedback-in-local-state-alongside-the-prediction-history-so-the-app-can-track-which-predictions-were-correct-and-which-were-incorrect",
+      "title": "Store win/loss feedback in local state alongside the prediction history so the app can track which predictions were correct and which were incorrect.",
+      "reqIds": [
+        "REQ-49"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-ui-feature-that-allows-the-user-to-upload-or-input-historical-pattern-data-from-old-market-results-so-the-app-can-learn-from-past-patterns-and-improve-prediction-accuracy-for-new-patterns",
+      "title": "Add a UI feature that allows the user to upload or input historical pattern data from old market results so the app can learn from past patterns and improve prediction accuracy for new patterns.",
+      "reqIds": [
+        "REQ-52"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-frontend-to-pass-win-loss-feedback-data-to-the-backend-when-generating-a-new-prediction-so-the-backend-can-use-this-feedback-to-refine-its-prediction-strategy",
+      "title": "Update the frontend to pass win/loss feedback data to the backend when generating a new prediction, so the backend can use this feedback to refine its prediction strategy.",
+      "reqIds": [
+        "REQ-54"
+      ],
+      "version": 1
     }
   ],
   "new_feature_requests": [
@@ -431,32 +506,66 @@
       "status": "pending"
     },
     {
-      "id": "AR-30",
-      "summary": "Increase rolling history length from 20 items to 30 items (and use last 30 Big/Small results for analysis/prediction) while keeping all other app behavior/UI unchanged.",
+      "id": "AR-38",
+      "summary": "Revert rolling history capacity and gated input flow from 30 items back to 20 items because 30-item mode is not producing good signals.",
       "reqIds": [],
       "status": "pending"
     },
     {
-      "id": "AR-35",
-      "summary": "Update the prediction request payload usage so predictions continue to work using the current in-memory history up to 30 items, and ensure no frontend logic assumes a 20-item maximum when generating or retrying predictions.",
+      "id": "AR-44",
+      "summary": "Revert any backend-side history storage caps from 30 entries back to 20 entries (where backend history storage is still present), while keeping the existing single-actor architecture and current prediction endpoint behavior unchanged.",
       "reqIds": [
-        "REQ-41"
+        "REQ-46"
       ],
       "status": "pending"
     },
     {
-      "id": "AR-36",
-      "summary": "Update the backend history cap used by any remaining history storage utilities from 20 to 30 so internal limits do not conflict with the new 30-entry model, without re-introducing login requirements or changing the anonymous prediction flow.",
+      "id": "AR-45",
+      "summary": "If the project has existing stable-state data that may contain history lists longer than 20, add or update backend/migration.mo so that on upgrade it trims any stored histories down to 20 entries (preserving most-recent entries) without breaking existing state.",
       "reqIds": [
-        "REQ-42"
+        "REQ-47"
       ],
       "status": "pending"
     },
     {
-      "id": "AR-37",
-      "summary": "Update the existing automated frontend prediction flow check (the DOM-based script) so it remains valid after switching to a 30-entry maximum (no assertions/logic that assume a 20-entry limit).",
+      "id": "AR-46",
+      "summary": "Add Win and Loss buttons so after each prediction the user can report whether it was correct (win) or incorrect (loss); update prediction logic to incorporate this feedback into future predictions.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-47",
+      "summary": "Improve prediction logic to better track patterns/trends and reduce consecutive loss streaks (user reports up to 8 consecutive losses).",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-48",
+      "summary": "Add pattern history upload capability so the user can import old pattern history from the market to help the app learn and predict new patterns more accurately.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-51",
+      "summary": "Update the backend prediction algorithm to accept an array of win/loss feedback (corresponding to recent predictions) and incorporate this feedback into the prediction logic to learn from past accuracy and adjust future predictions accordingly.",
       "reqIds": [
-        "REQ-43"
+        "REQ-50"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-52",
+      "summary": "Improve the backend prediction algorithm to better analyze the 20-item Big/Small history for patterns, trends, streaks, reversals, and alternation, reducing the tendency to predict Big excessively and minimizing consecutive loss streaks (reported up to 8 losses in a row).",
+      "reqIds": [
+        "REQ-51"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-54",
+      "summary": "Update the backend to accept and store uploaded historical pattern data from the user, and incorporate this data into the prediction algorithm to improve pattern recognition and prediction accuracy over time.",
+      "reqIds": [
+        "REQ-53"
       ],
       "status": "pending"
     }

@@ -43,9 +43,31 @@ export function usePredictNext() {
   return useMutation<BigSmallPrediction, Error, HistoryItem[]>({
     mutationFn: async (history: HistoryItem[]) => {
       if (!actor) throw new Error('Actor not available');
-      return actor.predictNext(history);
+      return actor.getPrediction(history);
     },
     retry: 1,
+  });
+}
+
+export function useUpdatePredictionFeedback() {
+  const { actor } = useActor();
+
+  return useMutation({
+    mutationFn: async (feedback: boolean[]) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.updatePredictionFeedback(feedback);
+    },
+  });
+}
+
+export function useUploadHistoricalPatterns() {
+  const { actor } = useActor();
+
+  return useMutation({
+    mutationFn: async (patterns: string[][]) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.uploadHistoricalPatterns(patterns);
+    },
   });
 }
 

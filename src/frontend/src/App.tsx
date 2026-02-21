@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import HistoryControls from './features/history/HistoryControls';
 import ResultsPanel from './features/results/ResultsPanel';
@@ -7,8 +8,11 @@ import { useLocalHistory } from './features/history/useLocalHistory';
 import { usePrediction } from './features/prediction/usePrediction';
 import { useActorConnection } from './features/prediction/useActorConnection';
 import { useGatedHistoryFlow } from './features/history/useGatedHistoryFlow';
+import { usePredictionFeedback } from './features/prediction/usePredictionFeedback';
+import { useUploadHistoricalPatterns } from './hooks/useQueries';
 import { AppErrorBoundary } from './components/AppErrorBoundary';
 import { TrendingUp } from 'lucide-react';
+import { toast } from 'sonner';
 import type { BigSmallResult } from './features/history/historyTypes';
 
 function AppContent() {
@@ -24,6 +28,10 @@ function AppContent() {
   // Use the gated history flow hook as single source of truth
   const { isUnlockedForNextEntry, handleNext, handleAddEntry: gatedAddEntry, resetGate } = useGatedHistoryFlow(historyCount);
 
+  // Feedback management
+  const { feedbackHistory, addFeedback, clearFeedback, getFeedbackArray } = usePredictionFeedback();
+  const [feedbackRecordedForCurrentPrediction, setFeedbackRecordedForCurrentPrediction] = useState(false);
+
   const { 
     prediction, 
     explanation, 
@@ -34,19 +42,43 @@ function AppContent() {
     isInitializing,
     generatePrediction,
     retryPrediction,
-  } = usePrediction(history);
+  } = usePrediction(history, getFeedbackArray());
 
   const { isReady, isConnecting, retry: retryConnection } = useActorConnection();
+
+  const { mutateAsync: uploadPatterns } = useUploadHistoricalPatterns();
 
   // Wrapped addEntry handler that uses the gated flow
   const handleAddEntry = (result: BigSmallResult) => {
     gatedAddEntry(result, addEntryToHistory);
   };
 
-  // Wrapped clear handler that also resets the gate state
+  // Wrapped clear handler that also resets the gate state and feedback
   const handleClearHistory = () => {
     clearHistoryState();
     resetGate();
+    clearFeedback();
+    setFeedbackRecordedForCurrentPrediction(false);
+  };
+
+  // Handle feedback recording
+  const handleFeedback = (isWin: boolean) => {
+    if (lastGeneratedAt && !feedbackRecordedForCurrentPrediction) {
+      addFeedback(lastGeneratedAt.getTime(), isWin);
+      setFeedbackRecordedForCurrentPrediction(true);
+      toast.success(isWin ? 'Win recorded!' : 'Loss recorded!');
+    }
+  };
+
+  // Wrapped prediction handler that resets feedback state
+  const handleGeneratePrediction = async () => {
+    setFeedbackRecordedForCurrentPrediction(false);
+    await generatePrediction();
+  };
+
+  // Handle pattern upload
+  const handleUploadPatterns = async (patterns: string[][]) => {
+    await uploadPatterns(patterns);
   };
 
   const connectionHint = isConnecting 
@@ -76,8 +108,9 @@ function AppContent() {
             <HistoryControls
               onAddEntry={handleAddEntry}
               onClearHistory={handleClearHistory}
-              onPredict={generatePrediction}
+              onPredict={handleGeneratePrediction}
               onNext={handleNext}
+              onUploadPatterns={handleUploadPatterns}
               historyCount={historyCount}
               isPredicting={isLoadingPrediction}
               isInitializing={isInitializing}
@@ -108,6 +141,8 @@ function AppContent() {
                 isConnecting={isConnecting}
                 onRetryPrediction={retryPrediction}
                 onRetryConnection={retryConnection}
+                onFeedback={handleFeedback}
+                feedbackRecorded={feedbackRecordedForCurrentPrediction}
               />
             </section>
           </div>

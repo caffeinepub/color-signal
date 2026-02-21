@@ -24,15 +24,19 @@ export enum UserRole {
     guest = "guest"
 }
 export interface backendInterface {
+    analyzeBias(history: Array<HistoryItem>): Promise<[bigint, bigint]>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
     getHistory(): Promise<Array<HistoryItem>>;
-    getPredictionBias(history: Array<HistoryItem>): Promise<bigint>;
-    getTimeWindowStats(history: Array<HistoryItem>, window: bigint, target: string): Promise<bigint>;
+    getPrediction(history: Array<HistoryItem>): Promise<BigSmallPrediction>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
+    historicalPatternAnalysis(history: Array<HistoryItem>): Promise<Array<Array<string>>>;
     isCallerAdmin(): Promise<boolean>;
-    predictNext(history: Array<HistoryItem>): Promise<BigSmallPrediction>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     saveHistoryEntry(newEntry: HistoryItem): Promise<void>;
+    switchTrendAnalysis(history: Array<HistoryItem>): Promise<[boolean, bigint]>;
+    updatePredictionFeedback(feedback: Array<boolean>): Promise<void>;
+    updateTimeWindow(timeWindow: bigint): Promise<void>;
+    uploadHistoricalPatterns(patterns: Array<Array<string>>): Promise<void>;
 }

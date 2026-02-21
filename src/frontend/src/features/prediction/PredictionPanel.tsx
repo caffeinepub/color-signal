@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Loader2, TrendingUp, AlertTriangle, XCircle, RefreshCw, WifiOff, ServerCrash } from 'lucide-react';
+import { Loader2, TrendingUp, AlertTriangle, XCircle, RefreshCw, WifiOff, ServerCrash, ThumbsUp, ThumbsDown } from 'lucide-react';
 import type { PredictionError } from './usePrediction';
 
 interface PredictionPanelProps {
@@ -14,6 +14,8 @@ interface PredictionPanelProps {
   onRetryPrediction?: () => void;
   onRetryConnection?: () => void;
   isConnecting?: boolean;
+  onFeedback?: (isWin: boolean) => void;
+  feedbackRecorded?: boolean;
 }
 
 export default function PredictionPanel({
@@ -26,6 +28,8 @@ export default function PredictionPanel({
   onRetryPrediction,
   onRetryConnection,
   isConnecting = false,
+  onFeedback,
+  feedbackRecorded = false,
 }: PredictionPanelProps) {
   const getErrorIcon = () => {
     if (!error) return <XCircle className="h-12 w-12 text-destructive" />;
@@ -155,6 +159,38 @@ export default function PredictionPanel({
                 <p className="text-sm leading-relaxed text-foreground" data-testid="prediction-explanation">{explanation}</p>
               </div>
             </div>
+
+            {/* Feedback Buttons */}
+            {onFeedback && (
+              <div className="space-y-3 mt-6">
+                <label className="text-sm font-medium text-muted-foreground">Was this prediction correct?</label>
+                <div className="grid grid-cols-2 gap-4">
+                  <Button
+                    onClick={() => onFeedback(true)}
+                    disabled={feedbackRecorded}
+                    variant="outline"
+                    className="h-14 text-lg font-semibold border-green-500/50 hover:bg-green-500/10 hover:border-green-500 disabled:opacity-50"
+                  >
+                    <ThumbsUp className="mr-2 h-5 w-5" />
+                    Win
+                  </Button>
+                  <Button
+                    onClick={() => onFeedback(false)}
+                    disabled={feedbackRecorded}
+                    variant="outline"
+                    className="h-14 text-lg font-semibold border-red-500/50 hover:bg-red-500/10 hover:border-red-500 disabled:opacity-50"
+                  >
+                    <ThumbsDown className="mr-2 h-5 w-5" />
+                    Loss
+                  </Button>
+                </div>
+                {feedbackRecorded && (
+                  <p className="text-xs text-center text-muted-foreground">
+                    Feedback recorded. Generate a new prediction to provide more feedback.
+                  </p>
+                )}
+              </div>
+            )}
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border py-12 text-center">

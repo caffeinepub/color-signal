@@ -1,146 +1,153 @@
 {
   "kind": "build_request",
-  "title": "Increase rolling history capacity from 20 to 30 without changing any other behavior",
-  "projectName": "Color Signal",
-  "priority": "normal",
+  "title": "Add Win/Loss feedback buttons and improve pattern-based prediction logic",
+  "projectName": "Signal Predictor",
+  "priority": "high",
   "requirements": [
     {
-      "id": "REQ-37",
-      "text": "Increase the local in-memory rolling history capacity from 20 entries to 30 entries, while preserving the existing as-entered chronological order and all current behaviors (tap-to-add, prediction triggering, and UI layout style) unchanged except where counts/limits must reflect 30.",
+      "id": "REQ-48",
+      "text": "Add two new buttons labeled 'Win' and 'Loss' in the UI that appear after a prediction is generated, allowing the user to report whether the prediction was correct (Win) or incorrect (Loss).",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "recent-1"
+          "msg-user-feedback-request"
         ],
         "quotes": [
-          "ok করো \" তবে আর বাকি সবকিছুই 100% আগের মতোই থাকবে একটুও change যাতে না হয়"
+          "win loss নামে 2 টা বাটন রাখবা তাহলে app signal দেওেয়ার পর আমি app কে জানাবো যে win নাকী loss"
         ]
       },
       "acceptanceCriteria": [
-        "The app allows adding history entries until the visible counter reaches 30/30.",
-        "When more than 30 entries would be added, history remains a rolling window capped at 30 entries (no crashes, no duplicate lists).",
-        "The history order remains the same as currently displayed/used (as-entered sequence), with numbering continuing to reflect the current order logic (do not reverse)."
+        "Win and Loss buttons are visible after a prediction is displayed",
+        "Buttons are labeled 'Win' and 'Loss' in English",
+        "Tapping Win or Loss records the feedback for that prediction"
       ]
     },
     {
-      "id": "REQ-38",
-      "text": "Update the gated input flow to operate at 30/30 instead of 20/20: show the \"Next\" button whenever historyCount is 30; when historyCount is 30 and the gate is locked, disable Big/Small taps; pressing \"Next\" unlocks exactly one subsequent Big/Small tap; that single tap appends the new entry while keeping history length at 30 (oldest entry drops off), and then the gate re-locks until \"Next\" is pressed again.",
+      "id": "REQ-49",
+      "text": "Store win/loss feedback in local state alongside the prediction history so the app can track which predictions were correct and which were incorrect.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "recent-1"
+          "msg-user-feedback-request"
         ],
         "quotes": [
-          "ok করো \" তবে আর বাকি সবকিছুই 100% আগের মতোই থাকবে একটুও change যাতে না হয়"
+          "সে হিসেবে এবং history অনুযায়ী signal predict করবে app"
         ]
       },
       "acceptanceCriteria": [
-        "The \"Next\" button is visible when (and only when) historyCount is exactly 30.",
-        "At 30/30 and locked, Big/Small buttons are disabled; after pressing \"Next\", exactly one Big/Small tap is accepted; immediately after that tap, Big/Small becomes disabled again until \"Next\" is pressed again.",
-        "After the single allowed tap at full history, the history still shows 30 items and reflects a correct rolling window (one oldest entry removed, one new entry appended).",
-        "All user-facing text introduced/updated for the gating flow remains in English (e.g., \"Next\", helper text)."
+        "Each prediction can be associated with a win or loss outcome",
+        "Feedback is stored locally (in-memory) for use in future predictions",
+        "Feedback persists as long as the session is active"
       ]
     },
     {
-      "id": "REQ-39",
-      "text": "Update all UI counters, helper text, and any hard-coded references from 20 to 30 so the interface consistently reflects the new 30-entry maximum without changing styling, component structure, or interactions beyond the required numeric updates.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "recent-1"
-        ],
-        "quotes": [
-          "ok করো \" তবে আর বাকি সবকিছুই 100% আগের মতোই থাকবে একটুও change যাতে না হয়"
-        ]
-      },
-      "acceptanceCriteria": [
-        "The Add Results badge shows X/30 (not X/20).",
-        "The Results history label shows History (X/30).",
-        "Any helper text that refers to being full reflects 30/30."
-      ]
-    },
-    {
-      "id": "REQ-40",
-      "text": "Update the Results panel compact history visualization to render 30 entries in the same compact style, preserving the as-entered order and numbered labels, by extending the existing two-line layout to accommodate 30 items (e.g., three rows of 10) without changing the overall look-and-feel of the panel.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "recent-1"
-        ],
-        "quotes": [
-          "ok করো \" তবে আর বাকি সবকিছুই 100% আগের মতোই থাকবে একটুও change যাতে না হয়"
-        ]
-      },
-      "acceptanceCriteria": [
-        "With 1–30 entries, the Results panel shows all entries with correct numbering and the same color styling rules (Big=yellow, Small=blue).",
-        "With 30 entries, all 30 are visible in the compact layout (no truncation) and the order matches the in-memory history sequence used for prediction.",
-        "The panel continues to render correctly on typical mobile viewport widths (no overlapping text that makes entries unreadable)."
-      ]
-    },
-    {
-      "id": "REQ-41",
-      "text": "Update the prediction request payload usage so predictions continue to work using the current in-memory history up to 30 items, and ensure no frontend logic assumes a 20-item maximum when generating or retrying predictions.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "recent-1"
-        ],
-        "quotes": [
-          "ok করো \" তবে আর বাকি সবকিছুই 100% আগের মতোই থাকবে একটুও change যাতে না হয়"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Predictions can be generated successfully when history length is 1, 20, and 30.",
-        "Retry behavior continues to work and uses the current in-memory history (up to 30) without errors."
-      ]
-    },
-    {
-      "id": "REQ-42",
-      "text": "Update the backend history cap used by any remaining history storage utilities from 20 to 30 so internal limits do not conflict with the new 30-entry model, without re-introducing login requirements or changing the anonymous prediction flow.",
+      "id": "REQ-50",
+      "text": "Update the backend prediction algorithm to accept an array of win/loss feedback (corresponding to recent predictions) and incorporate this feedback into the prediction logic to learn from past accuracy and adjust future predictions accordingly.",
       "target": "backend",
       "source": {
         "messageIds": [
-          "recent-1"
+          "msg-user-feedback-request"
         ],
         "quotes": [
-          "ok করো \" তবে আর বাকি সবকিছুই 100% আগের মতোই থাকবে একটুও change যাতে না হয়"
+          "সে হিসেবে এবং history অনুযায়ী signal predict করবে app"
         ]
       },
       "acceptanceCriteria": [
-        "Any backend capping logic that currently enforces 20 entries enforces 30 entries instead.",
-        "The backend predictNext(history) continues to accept and process histories up to length 30 without trapping.",
-        "Anonymous callers can still call predictNext(history) (no new authorization checks added)."
+        "Backend predictNext function accepts an optional feedback array parameter",
+        "Prediction logic uses feedback to identify which patterns led to wins vs losses",
+        "Algorithm adjusts its pattern detection strategy based on feedback"
       ]
     },
     {
-      "id": "REQ-43",
-      "text": "Update the existing automated frontend prediction flow check (the DOM-based script) so it remains valid after switching to a 30-entry maximum (no assertions/logic that assume a 20-entry limit).",
-      "target": "frontend",
+      "id": "REQ-51",
+      "text": "Improve the backend prediction algorithm to better analyze the 20-item Big/Small history for patterns, trends, streaks, reversals, and alternation, reducing the tendency to predict Big excessively and minimizing consecutive loss streaks (reported up to 8 losses in a row).",
+      "target": "backend",
       "source": {
         "messageIds": [
-          "recent-1"
+          "msg-user-feedback-request"
         ],
         "quotes": [
-          "ok করো \" তবে আর বাকি সবকিছুই 100% আগের মতোই থাকবে একটুও change যাতে না হয়"
+          "Signal ভালো দিচ্ছে না টানা 8 টাও loss হয়ে যায়",
+          "এখানে বেশিরভাগ সময় ই big এ signal  দেয়",
+          "কোনো কিছু বুঝে app signal দেয় না"
         ]
       },
       "acceptanceCriteria": [
-        "Running the check via ?checkPrediction=1 still produces a PASS when backend is available.",
-        "The check does not fail due to any hard-coded 20-entry assumptions."
+        "Prediction logic analyzes recent history for streaks (consecutive Big or Small)",
+        "Prediction logic detects alternating patterns (zig-zag between Big and Small)",
+        "Prediction logic identifies reversals after long streaks",
+        "Algorithm balances Big and Small predictions based on actual history distribution",
+        "Consecutive loss streaks are reduced by improving pattern recognition"
+      ]
+    },
+    {
+      "id": "REQ-52",
+      "text": "Add a UI feature that allows the user to upload or input historical pattern data from old market results so the app can learn from past patterns and improve prediction accuracy for new patterns.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-user-feedback-request"
+        ],
+        "quotes": [
+          "আমি Market এর old pattern গুলা থেকে new pattern এর দিকে history upload করবো"
+        ]
+      },
+      "acceptanceCriteria": [
+        "UI provides an input mechanism for uploading or entering historical Big/Small pattern sequences",
+        "User can submit old pattern history to supplement the current 20-item rolling history",
+        "Uploaded pattern data is sent to the backend for analysis"
+      ]
+    },
+    {
+      "id": "REQ-53",
+      "text": "Update the backend to accept and store uploaded historical pattern data from the user, and incorporate this data into the prediction algorithm to improve pattern recognition and prediction accuracy over time.",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-user-feedback-request"
+        ],
+        "quotes": [
+          "আমি Market এর old pattern গুলা থেকে new pattern এর দিকে history upload করবো"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Backend accepts uploaded historical pattern sequences",
+        "Uploaded patterns are stored (in-memory or stable storage) for analysis",
+        "Prediction algorithm uses both current rolling history and uploaded historical patterns to improve accuracy"
+      ]
+    },
+    {
+      "id": "REQ-54",
+      "text": "Update the frontend to pass win/loss feedback data to the backend when generating a new prediction, so the backend can use this feedback to refine its prediction strategy.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-user-feedback-request"
+        ],
+        "quotes": [
+          "সে হিসেবে এবং history অনুযায়ী signal predict করবে app"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Frontend collects win/loss feedback for recent predictions",
+        "Feedback data is included in the prediction request payload",
+        "Backend receives and processes the feedback data"
       ]
     }
   ],
   "constraints": [
-    "Do not change any existing behaviors, styling, layout structure, or user-facing flows other than updating limits/counters/gating from 20 to 30 where strictly required.",
-    "Keep all user-facing UI text in English.",
-    "Frontend immutable paths must not be modified: frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useInternetIdentity.tsx, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, frontend/src/components/ui.",
-    "Backend must remain a single Motoko actor in backend/main.mo; only add migration code if an upgrade requires state changes."
+    "Maintain the single-actor backend architecture with all logic in backend/main.mo",
+    "Preserve the existing 20-item rolling history capacity and gated input flow (20/20 Next button behavior)",
+    "Keep all user-facing UI text in English",
+    "Do not modify immutable frontend paths: useInternetIdentity, useActor, main.tsx, or frontend/src/components/ui",
+    "Maintain anonymous user support (no login required)"
   ],
   "nonGoals": [
-    "Do not add or reintroduce Internet Identity login/logout UI or per-user persistence messaging.",
-    "Do not redesign the visual theme or change button colors (Big must remain yellow; Small must remain blue).",
-    "Do not claim or implement any guaranteed accuracy target (e.g., 99.99%); only adjust the history window size to 30.",
-    "Do not add new backend services or external databases."
+    "Changing the rolling history capacity from 20 entries",
+    "Adding Internet Identity login or user authentication",
+    "Implementing real-time synchronization or WebSocket features",
+    "Integrating external AI services or third-party prediction APIs",
+    "Changing the Big (yellow) and Small (blue) button color scheme"
   ],
   "imageRequirements": {
     "required": [],

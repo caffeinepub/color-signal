@@ -2,10 +2,11 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-increase-the-local-in-memory-rolling-history-capacity-from-20-entries-to-30-entries-while-preserving-the-existing-as-entered-chronological-order-and-all-current-behaviors-tap-to-add-prediction-triggering-and-ui-layout-style-unchanged-except-where-counts-limits-must-reflect-30",
-      "featureTitle": "Increase the local in-memory rolling history capacity from 20 entries to 30 entries, while preserving the existing as-entered chronological order and all current behaviors (tap-to-add, prediction triggering, and UI layout style) unchanged except where counts/limits must reflect 30.",
+      "featureId": "feature-add-two-new-buttons-labeled-win-and-loss-in-the-ui-that-appear-after-a-prediction-is-generated-allowing-the-user-to-report-whether-the-prediction-was-correct-win-or-incorrect-loss",
+      "featureTitle": "Add two new buttons labeled 'Win' and 'Loss' in the UI that appear after a prediction is generated, allowing the user to report whether the prediction was correct (Win) or incorrect (Loss).",
       "files": [
-        "frontend/src/features/history/useLocalHistory.ts"
+        "frontend/src/App.tsx",
+        "frontend/src/features/prediction/PredictionPanel.tsx"
       ],
       "components": [
         "authorization@4.0.0",
@@ -16,16 +17,37 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-37"
+        "REQ-48"
       ],
       "confidence": "high"
     },
     {
-      "featureId": "feature-update-the-gated-input-flow-to-operate-at-30-30-instead-of-20-20-show-the-next-button-whenever-historycount-is-30-when-historycount-is-30-and-the-gate-is-locked-disable-big-small-taps-pressing-next-unlocks-exactly-one-subsequent-big-small-tap-that-single-tap-appends-the-new-entry-while-keeping-history-length-at-30-oldest-entry-drops-off-and-then-the-gate-re-locks-until-next-is-pressed-again",
-      "featureTitle": "Update the gated input flow to operate at 30/30 instead of 20/20: show the \"Next\" button whenever historyCount is 30; when historyCount is 30 and the gate is locked, disable Big/Small taps; pressing \"Next\" unlocks exactly one subsequent Big/Small tap; that single tap appends the new entry while keeping history length at 30 (oldest entry drops off), and then the gate re-locks until \"Next\" is pressed again.",
+      "featureId": "feature-store-win-loss-feedback-in-local-state-alongside-the-prediction-history-so-the-app-can-track-which-predictions-were-correct-and-which-were-incorrect",
+      "featureTitle": "Store win/loss feedback in local state alongside the prediction history so the app can track which predictions were correct and which were incorrect.",
+      "files": [
+        "frontend/src/App.tsx",
+        "frontend/src/features/prediction/usePredictionFeedback.ts"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-49"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-add-a-ui-feature-that-allows-the-user-to-upload-or-input-historical-pattern-data-from-old-market-results-so-the-app-can-learn-from-past-patterns-and-improve-prediction-accuracy-for-new-patterns",
+      "featureTitle": "Add a UI feature that allows the user to upload or input historical pattern data from old market results so the app can learn from past patterns and improve prediction accuracy for new patterns.",
       "files": [
         "frontend/src/features/history/HistoryControls.tsx",
-        "frontend/src/features/history/useGatedHistoryFlow.ts"
+        "frontend/src/features/history/HistoryUploadDialog.tsx",
+        "frontend/src/hooks/useQueries.ts"
       ],
       "components": [
         "authorization@4.0.0",
@@ -36,16 +58,16 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-38"
+        "REQ-52"
       ],
       "confidence": "high"
     },
     {
-      "featureId": "feature-update-all-ui-counters-helper-text-and-any-hard-coded-references-from-20-to-30-so-the-interface-consistently-reflects-the-new-30-entry-maximum-without-changing-styling-component-structure-or-interactions-beyond-the-required-numeric-updates",
-      "featureTitle": "Update all UI counters, helper text, and any hard-coded references from 20 to 30 so the interface consistently reflects the new 30-entry maximum without changing styling, component structure, or interactions beyond the required numeric updates.",
+      "featureId": "feature-update-the-frontend-to-pass-win-loss-feedback-data-to-the-backend-when-generating-a-new-prediction-so-the-backend-can-use-this-feedback-to-refine-its-prediction-strategy",
+      "featureTitle": "Update the frontend to pass win/loss feedback data to the backend when generating a new prediction, so the backend can use this feedback to refine its prediction strategy.",
       "files": [
-        "frontend/src/features/history/HistoryControls.tsx",
-        "frontend/src/features/results/ResultsPanel.tsx"
+        "frontend/src/App.tsx",
+        "frontend/src/features/prediction/usePrediction.ts"
       ],
       "components": [
         "authorization@4.0.0",
@@ -56,26 +78,7 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-39"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-update-the-results-panel-compact-history-visualization-to-render-30-entries-in-the-same-compact-style-preserving-the-as-entered-order-and-numbered-labels-by-extending-the-existing-two-line-layout-to-accommodate-30-items-e-g-three-rows-of-10-without-changing-the-overall-look-and-feel-of-the-panel",
-      "featureTitle": "Update the Results panel compact history visualization to render 30 entries in the same compact style, preserving the as-entered order and numbered labels, by extending the existing two-line layout to accommodate 30 items (e.g., three rows of 10) without changing the overall look-and-feel of the panel.",
-      "files": [
-        "frontend/src/features/results/ResultsPanel.tsx"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-40"
+        "REQ-54"
       ],
       "confidence": "high"
     }

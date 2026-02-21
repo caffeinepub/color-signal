@@ -6,11 +6,12 @@ import Text "mo:core/Text";
 import Nat "mo:core/Nat";
 import Int "mo:core/Int";
 import Iter "mo:core/Iter";
+import Float "mo:core/Float";
+import Array "mo:core/Array";
+
 import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
-import Migration "migration";
 
-(with migration = Migration.run)
 actor {
   let accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
@@ -53,6 +54,15 @@ actor {
   };
 
   let historyStore = Map.empty<Principal, List.List<HistoryItem>>();
+  var accuracyRate : Float = 0.0;
+  var numPredictions : Nat = 0;
+  var lossStreak : Nat = 0;
+  var winStreak : Nat = 0;
+  var bigBiasCount : Nat = 0;
+  var smallBiasCount : Nat = 0;
+
+  var historicalPatterns : [[Text]] = [];
+  var cacheTimeWindow : ?Int = null;
 
   public shared ({ caller }) func saveHistoryEntry(newEntry : HistoryItem) : async () {
     if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
@@ -66,8 +76,7 @@ actor {
 
     currentHistory.add(newEntry);
 
-    // Cap at 30 entries
-    if (currentHistory.size() > 30) {
+    if (currentHistory.size() > 20) {
       _removeFirst(currentHistory);
     };
 
@@ -85,75 +94,133 @@ actor {
     };
   };
 
-  public query func predictNext(history : [HistoryItem]) : async BigSmallPrediction {
-    if (history.size() == 0) {
-      return {
-        prediction = "Big";
-        explanation = "No history data available yet. Default prediction is 'Big'.";
+  public shared ({ caller }) func updatePredictionFeedback(feedback : [Bool]) : async () {
+    if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
+      Runtime.trap("Unauthorized: Only users can update predictions");
+    };
+
+    var correctPredictions = 0;
+    for (f in feedback.values()) {
+      if (f) { correctPredictions += 1 };
+    };
+
+    numPredictions += feedback.size();
+    accuracyRate := numPredictions.toFloat() / feedback.size().toFloat();
+
+    // Update streaks
+    if (feedback.size() > 0) {
+      let lastFeedback = feedback[feedback.size() - 1];
+      if (lastFeedback) {
+        winStreak += 1;
+        lossStreak := 0;
+      } else {
+        lossStreak += 1;
+        winStreak := 0;
+      };
+    };
+  };
+
+  public shared ({ caller }) func analyzeBias(history : [HistoryItem]) : async (Nat, Nat) {
+    if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
+      Runtime.trap("Unauthorized: Only users can analyze bias");
+    };
+
+    var bigCount = 0;
+    var smallCount = 0;
+
+    for (item in history.values()) {
+      if (Text.equal(item.result, "Big")) {
+        bigCount += 1;
+      } else if (Text.equal(item.result, "Small")) {
+        smallCount += 1;
       };
     };
 
-    let bigCount = countResults(history, "Big");
-    let smallCount = countResults(history, "Small");
-    let longestStreak = calculateLongestStreak(history);
-    let shortTermTrend = checkShortTermTrend(history, 5);
+    bigBiasCount := bigCount;
+    smallBiasCount := smallCount;
 
-    // Short-Term Trend Analysis
-    if (shortTermTrend.0 and shortTermTrend.1 > 2) {
-      return {
-        prediction = "Small";
-        explanation = "There is a strong short-term trend of 'Big' results. Expecting a potential reversal to 'Small' based on the gambler's fallacy.";
-      };
+    (bigCount, smallCount);
+  };
+
+  public query ({ caller }) func switchTrendAnalysis(history : [HistoryItem]) : async (Bool, Nat) {
+    if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
+      Runtime.trap("Unauthorized: Only users can perform switch trend analysis");
     };
 
-    if (not shortTermTrend.0 and shortTermTrend.1 > 2) {
-      return {
-        prediction = "Big";
-        explanation = "There is a strong short-term trend of 'Small' results. Expecting a potential reversal to 'Big' based on the gambler's fallacy.";
-      };
+    let (hasSwitch, switchCount) = _checkSwitchTrend(history);
+
+    (hasSwitch, switchCount);
+  };
+
+  public shared ({ caller }) func updateTimeWindow(timeWindow : Int) : async () {
+    if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
+      Runtime.trap("Unauthorized: Only users can set time window");
     };
 
-    // Long-Term Bias Analysis
-    if (bigCount > smallCount) {
-      return {
-        prediction = "Small";
-        explanation = "Long-term history shows a bias towards 'Big' results. Predicting 'Small' assuming trend reversals are likely.";
-      };
-    } else if (smallCount > bigCount) {
-      return {
-        prediction = "Big";
-        explanation = "Long-term history shows a bias towards 'Small' results. Predicting 'Big' assuming trend reversals are likely.";
-      };
+    cacheTimeWindow := ?timeWindow;
+  };
+
+  public shared ({ caller }) func historicalPatternAnalysis(history : [HistoryItem]) : async [[Text]] {
+    if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
+      Runtime.trap("Unauthorized: Only users can perform historical pattern analysis");
     };
 
-    // Streak Analysis
-    if (longestStreak > 3 and history.size() > 0) {
-      let lastResult = history[history.size() - 1].result;
-      let nextPrediction = if (Text.equal(lastResult, "Big")) {
+    let patterns = _findPatterns(history, 3);
+
+    _updateHistoricalPatterns(patterns);
+
+    patterns;
+  };
+
+  public shared ({ caller }) func uploadHistoricalPatterns(patterns : [[Text]]) : async () {
+    if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
+      Runtime.trap("Unauthorized: Only users can upload historical patterns");
+    };
+
+    _updateHistoricalPatterns(patterns);
+  };
+
+  public query ({ caller }) func getPrediction(history : [HistoryItem]) : async BigSmallPrediction {
+    if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
+      Runtime.trap("Unauthorized: Only users can get predictions");
+    };
+
+    // Simple prediction logic based on patterns and bias
+    let (bigCount, smallCount) = _countBigSmall(history);
+    let (hasSwitch, switchCount) = _checkSwitchTrend(history);
+
+    let prediction = if (bigCount > smallCount and lossStreak < 3) {
+      "Small";
+    } else if (smallCount > bigCount and lossStreak < 3) {
+      "Big";
+    } else if (hasSwitch and switchCount > 5) {
+      if (history.size() > 0 and Text.equal(history[history.size() - 1].result, "Big")) {
         "Small";
       } else {
         "Big";
       };
-      return {
-        prediction = nextPrediction;
-        explanation = "Extended streak detected. Predicting a reversal from the streak's dominant result.";
+    } else {
+      "Big";
+    };
+
+    let explanation = "Prediction based on historical patterns, bias analysis, and streak detection";
+
+    { prediction; explanation };
+  };
+
+  func _countBigSmall(history : [HistoryItem]) : (Nat, Nat) {
+    var bigCount = 0;
+    var smallCount = 0;
+
+    for (item in history.values()) {
+      if (Text.equal(item.result, "Big")) {
+        bigCount += 1;
+      } else if (Text.equal(item.result, "Small")) {
+        smallCount += 1;
       };
     };
 
-    // Random Fluctuation Handling
-    let randomTrend = checkShortTermTrend(history, 3);
-    if (randomTrend.1 == 1) {
-      return {
-        prediction = if (randomTrend.0) { "Small" } else { "Big" };
-        explanation = "Random fluctuations detected recently. No strong trend identified, predicting based on the last result.";
-      };
-    };
-
-    // Default prediction - fallback to 'Big'
-    {
-      prediction = "Big";
-      explanation = "No dominant trend identified in history data. Predicting 'Big' by default.";
-    };
+    (bigCount, smallCount);
   };
 
   func _removeFirst<T>(list : List.List<T>) {
@@ -168,89 +235,49 @@ actor {
     };
   };
 
-  func countResults(history : [HistoryItem], target : Text) : Int {
-    var count = 0;
-    var i = 0;
-    while (i < history.size()) {
-      if (Text.equal(history[i].result, target)) {
-        count += 1;
-      };
-      i += 1;
-    };
-    count;
-  };
+  func _checkSwitchTrend(history : [HistoryItem]) : (Bool, Nat) {
+    var hasSwitch = false;
+    var switchCount = 0;
 
-  func calculateLongestStreak(history : [HistoryItem]) : Nat {
-    var maxStreak = 0;
-    var currentStreak = 1;
+    if (history.size() == 0) { return (false, 0) };
 
-    if (history.size() == 0) {
-      return 0;
-    };
+    let firstResult = history[0].result;
 
-    var lastResult = history[0].result;
-
-    // Fixed: Use range 1 to (size - 1) to avoid out-of-bounds
-    if (history.size() > 1) {
-      for (i in Nat.range(1, history.size() - 1)) {
-        if (Text.equal(history[i].result, lastResult)) {
-          currentStreak += 1;
-          maxStreak := Int.max(currentStreak, maxStreak).toNat();
-        } else {
-          currentStreak := 1;
-          lastResult := history[i].result;
-        };
+    for (item in history.values()) {
+      if (not Text.equal(item.result, firstResult)) {
+        hasSwitch := true;
+        switchCount += 1;
       };
     };
 
-    maxStreak;
+    (hasSwitch, switchCount);
   };
 
-  func checkShortTermTrend(history : [HistoryItem], windowSize : Nat) : (Bool, Nat) {
-    let size = history.size();
-    if (size == 0 or windowSize == 0) {
-      return (true, 0);
+  func _findPatterns(history : [HistoryItem], patternLength : Nat) : [[Text]] {
+    let patternSize = if (history.size() < patternLength) {
+      history.size();
+    } else {
+      patternLength;
     };
 
-    let actualWindow = Nat.min(windowSize, size);
-    let startIndex = size - actualWindow;
-    let targetResult = history[startIndex].result;
+    if (patternSize == 0) { return [] };
 
-    var isConsistent = true;
-    var streakLength = 0;
+    let patterns = List.empty<[Text]>();
 
-    var i = 0;
-    while (i < actualWindow) {
-      if (Text.equal(history[startIndex + i].result, targetResult)) {
-        streakLength += 1;
-      } else {
-        isConsistent := false;
-      };
-      i += 1;
+    var index = 0;
+    while (index + patternSize <= history.size()) {
+      let endIndex = index + patternSize;
+      if (endIndex > history.size()) { return patterns.toArray() };
+
+      let slice = history.sliceToArray(index, endIndex);
+      patterns.add(slice.map(func(item) { item.result }));
+      index += 1;
     };
 
-    (Text.equal(targetResult, "Big") and isConsistent, streakLength);
+    patterns.toArray();
   };
 
-  public query func getPredictionBias(history : [HistoryItem]) : async Int {
-    // No authorization check - operates on provided history data, accessible to all
-    let bigCount = countResults(history, "Big");
-    let smallCount = countResults(history, "Small");
-    bigCount - smallCount;
-  };
-
-  public query func getTimeWindowStats(history : [HistoryItem], window : Int, target : Text) : async Int {
-    // No authorization check - operates on provided history data, accessible to all
-    var count = 0;
-    var i = 0;
-    let size = history.size();
-    let windowSize = Nat.min(Int.abs(window), size);
-    while (i < windowSize) {
-      if (Text.equal(history[i].result, target)) {
-        count += 1;
-      };
-      i += 1;
-    };
-    count;
+  func _updateHistoricalPatterns(newPatterns : [[Text]]) {
+    historicalPatterns := historicalPatterns.concat(newPatterns);
   };
 };
